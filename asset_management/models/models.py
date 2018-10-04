@@ -8,9 +8,6 @@ from odoo.exceptions import UserError, ValidationError
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
 from odoo.tools import float_compare, float_is_zero
 
-
-
-
 class Asset(models.Model):
     _name = 'asset_management.asset'
     _inherit = ['mail.thread', 'mail.activity.mixin']
