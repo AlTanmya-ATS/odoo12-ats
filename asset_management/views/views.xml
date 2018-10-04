@@ -446,7 +446,7 @@
 
                <!--book-assets form view -->
         <record model="ir.ui.view" id="book_assets_form_view">
-            <field name="name">book_assets form</field>
+            <field name="name">book assets</field>
             <field name="model">asset_management.book_assets</field>
             <field name="arch" type="xml">
                 <form string="Book Asset Form" create="false">
