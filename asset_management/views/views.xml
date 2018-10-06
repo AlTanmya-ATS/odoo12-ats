@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-   <data>
+
 
                <!--Retirement form view -->
         <record model="ir.ui.view" id="retirement_form_view">
@@ -445,7 +445,7 @@
 
 
                <!--book-assets form view -->
-        <record model="ir.ui.view" id="book_assets_form_view">
+        <record id="book_assets_view_form" model="ir.ui.view" >
             <field name="name">book assets</field>
             <field name="model">asset_management.book_assets</field>
             <field name="arch" type="xml">
@@ -1429,10 +1429,9 @@
             id="dep_run_process_meun"
             parent="calendar_menu"/>
 
-        </data>
 
 
-    <data >
+    <data noupdate="1">
 
       <record model="ir.sequence" id="seq_asset">
         <field name="name">asset_sequence</field>
