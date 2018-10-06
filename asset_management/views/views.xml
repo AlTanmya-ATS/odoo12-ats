@@ -443,7 +443,6 @@
                   action="book_list_action"/>
 
 
-
                <!--book-assets form view -->
         <record id="book_assets_view_form" model="ir.ui.view" >
             <field name="name">book assets</field>
