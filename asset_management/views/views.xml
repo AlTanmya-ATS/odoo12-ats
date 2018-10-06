@@ -1128,7 +1128,7 @@
                              <div class="oe_left oe_title">
                                 <lable for="name" class="oe_edit_only"/>
                                 <h1>
-                                    <field name="name" placeholder="Calendar's Name"/>
+                                    <field name="name" placeholder="Retirement Type's Name"/>
                                 </h1>
                             </div>
                              <group>
