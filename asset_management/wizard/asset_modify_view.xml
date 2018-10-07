@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+    <record id="asset_dep_modify_view" model="ir.ui.view">
+        <field name="name">asset_management_modify</field>
+        <field name="model">asset_management.modify</field>
+        <field name="arch" type="xml">
+            <form string="Modify Asset">
+                <sheet>
+                    <group>
+                        <field name="asset_method_time" invisbile="1"/>
+                        <field name="name"/>
+                        <field name="method_number" attr="{'invisible':[('asset_method_time','=','end')]}"/>
+                        <field name="life_months"/>
+                        <field name="end_date" attr="{'invisible':[('asset_method_time','=','number')]}"/>
+                    </group>
+                    <footer>
+                        <button name="modify" string="Modify" type="object" class="btn-primary" />
+                        <button string="Cancel" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="asset_dep_modify_action" model="ir.actions.act_window">
+        <field name="name">asset management modify</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">asset_management.modify</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="asset_dep_modify_view"/>
+        <field name="target">new</field>
+    </record>
+
+
+    </data>
+</odoo>
