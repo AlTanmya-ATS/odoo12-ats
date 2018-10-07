@@ -1,2 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_asset_management_asset_management,asset_management.asset_management,model_asset_management_asset_management,,1,0,0,0
+access_asset_management_asset,asset_management.asset_management_asset,model_asset_management_asset,,1,1,1,1
+access_asset_management_book,asset_management.asset_management_book,model_asset_management_book,,1,1,1,1
+access_asset_management_book_assets,asset_management.asset_management_book_assets,model_asset_management_book_assets,,1,1,1,1

@@ -482,7 +482,6 @@
                                 <label for="salvage_value"/>
                                 <dive>
                                     <field name="salvage_value" class="oe_inline" attrs="{'readonly':[('state','=','close')]}"/>
-                                    <label string="%" class="oe_inline" attrs="{'invisible':[('salvage_value_type','=','amount')]}"/>
                                 </dive>
                                 <field name="salvage_value_amount"/>
 							    <field name="residual_value"/>
