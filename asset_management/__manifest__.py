@@ -21,20 +21,21 @@
 
     # any module necessary for this one to work correctly
     'depends': ['base',
-               'account' ,'hr','stock'
+                'account', 'hr'
                 ],
 
     # always loaded
     'data': [
         'security/ir.model.access.csv',
-        # 'views/resources.xml',
+        'views/resources.xml',
         'wizard/asset_modify_view.xml',
         'views/views.xml',
         'views/templates.xml',
+        # 'views/res_config_setting.xml',
         'wizard/mas_entries.xml',
         'wizard/re_class.xml',
         'wizard/modify_dep.xml',
-        'wizard/confirmation_view.xml'
+        # 'wizard/confirmation_view.xml'
 
     ],
     # only loaded in demonstration mode

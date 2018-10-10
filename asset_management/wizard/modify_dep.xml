@@ -7,22 +7,22 @@
             <form string="Modify Depreciation Method">
                 <sheet>
                     <group>
-                         <!--<field name="book_id"/>-->
+                        <!--<field name="book_id"/>-->
                         <!--<field name="asset_id" attrs="{'readonly':[('book_id','=',False)]}"/>-->
-                        <field name="dep_method" />
+                        <field name="dep_method"/>
                         <field name="method_progress_factor" attrs="{'invisible':[('dep_method','!=','degressive')]}"/>
-                        <field name="life_months" />
-                        <field name="method_time" />
+                        <field name="life_months"/>
+                        <field name="method_time"/>
                         <field name="method_number" attrs="{'invisible':[('method_time','=','end')]}"/>
                         <field name="end_date" attrs="{'invisible':[('method_time','=','number')]}"/>
-                         <label for="model_id" string="Recipients"/>
-                            <div>
-                                <field name="model_id"/>
-                                <field name="model_name" invisible="1"/>
-                                <field name="modify_dep_domain" widget="domain"
-                                    options="{'model': 'model_name'}"
-                                    context="{'search_default_not_opt_out':1}"/>
-                            </div>
+                        <label for="model_id" string="Recipients"/>
+                        <div>
+                            <field name="model_id"/>
+                            <field name="model_name" invisible="1"/>
+                            <field name="modify_dep_domain" widget="domain"
+                                   options="{'model': 'model_name'}"
+                                   context="{'search_default_not_opt_out':1}"/>
+                        </div>
                     </group>
                 </sheet>
                 <footer>
@@ -42,6 +42,7 @@
     </record>
     <!-- This Menu Item must have a parent and an action -->
     <menuitem id="modify_dep_menu" name="Modify Depreciation Method" parent="menu_actions_on_asset"/>
-    <menuitem id="modify_dep_method_menu" name="Modify Depreciation Method" parent="modify_dep_menu" action="modify_dep_action"/>
+    <menuitem id="modify_dep_method_menu" name="Modify Depreciation Method" parent="modify_dep_menu"
+              action="modify_dep_action"/>
 
 </odoo>

@@ -21,14 +21,14 @@
         </field>
     </record>
 
- <!--special='cancel'-->
-        <!--<record id="confirmation_wizard_action" model="ir.actions.act_window">-->
-        <!--<field name="name">confirmation wizard action</field>-->
-        <!--<field name="type">ir.actions.act_window</field>-->
-        <!--<field name="res_model">asset_management.confirmation_wizard</field>-->
-        <!--<field name="view_mode">form</field>-->
-        <!--<field name="view_id" ref="confirmation_wizard_form"/>-->
-        <!--<field name="target">new</field>-->
+    <!--special='cancel'-->
+    <!--<record id="confirmation_wizard_action" model="ir.actions.act_window">-->
+    <!--<field name="name">confirmation wizard action</field>-->
+    <!--<field name="type">ir.actions.act_window</field>-->
+    <!--<field name="res_model">asset_management.confirmation_wizard</field>-->
+    <!--<field name="view_mode">form</field>-->
+    <!--<field name="view_id" ref="confirmation_wizard_form"/>-->
+    <!--<field name="target">new</field>-->
     <!--</record>-->
 
 

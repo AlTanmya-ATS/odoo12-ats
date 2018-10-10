@@ -4,7 +4,9 @@ from odoo import api, fields, models
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
-    asset_depreciation_id = fields.One2many('asset_management.depreciation', 'move_id', string='Assets Depreciation Lines', ondelete="restrict")
+    asset_depreciation_id = fields.One2many('asset_management.depreciation', 'move_id',
+                                            string='Assets Depreciation Lines', ondelete="restrict")
+
     # asset_transaction_id = fields.One2many('asset_management.transaction','move_id',string='Assets Transaction Lines', ondelete="restrict")
     @api.multi
     def button_cancel(self):
@@ -12,8 +14,6 @@ class AccountMove(models.Model):
             for line in move.asset_depreciation_id:
                 line.move_posted_check = False
         return super(AccountMove, self).button_cancel()
-
-
 
     @api.multi
     def post(self):
