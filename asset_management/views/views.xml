@@ -2,14 +2,14 @@
 <odoo>
     <data>
 
-        <!--Retirement form view -->
+
         <record model="ir.ui.view" id="retirement_form_view">
             <field name="name">retirement.form</field>
             <field name="model">asset_management.retirement</field>
             <field name="arch" type="xml">
                 <form string="Retirement Form" edit="false">
                     <header>
-                        <!--<button name="required_computation" string="compute" type="object" class="oe_highlight" attrs="{'invisible':[('id','!=',False)]}"/>-->
+
                         <button name="reinstall" string="Reinstall" type="object" class="oe_highlight" attrs="{'invisible':['|',('id','=',False),
                                                             ('state','=','reinstall')]}"/>
                         <field name="state" widget="statusbar" statusbar_visible="draft,complete"/>
@@ -38,7 +38,7 @@
                                 <field name="partner_id" attrs="{'readonly':[('id','!=',False)]}"/>
                                 <field name="cost_of_removal" attrs="{'readonly':[('id','!=',False)]}"/>
                                 <field name="accumulated_value" invisible="1" force_save="1"/>
-                                <!--<field name="jl_is_posted" invisible="1"/>-->
+
                             </group>
                         </group>
                         <notebook>
@@ -55,7 +55,7 @@
                 </form>
             </field>
         </record>
-        <!--retirement list view -->
+
         <record model="ir.ui.view" id="retirement_tree_view">
             <field name="name">retirement.tree</field>
             <field name="model">asset_management.retirement</field>
@@ -67,7 +67,7 @@
             </field>
         </record>
 
-        <!--Retirement search view -->
+
         <record model="ir.ui.view" id="retirement">
             <field name="name">retirement.search</field>
             <field name="model">asset_management.retirement</field>
@@ -79,7 +79,7 @@
             </field>
         </record>
 
-        <!--retirement action window-->
+
         <record model="ir.actions.act_window" id="retirement_list_action">
             <field name="name">Retirement</field>
             <field name="res_model">asset_management.retirement</field>
@@ -93,7 +93,7 @@
         </record>
 
 
-        <!--asset form view -->
+
         <record model="ir.ui.view" id="asset_form_view">
             <field name="name">asset.form</field>
             <field name="model">asset_management.asset</field>
@@ -127,7 +127,7 @@
                                 <field name="is_new"/>
                                 <field name="ownership_type"/>
                                 <field name="asset_serial_number"/>
-                                <!--<field name="serial_flag" invisible="1"/>-->
+
                                 <field name="asset_tag_number" widget="many2many_tags"/>
                             </group>
                         </group>
@@ -196,7 +196,7 @@
             </field>
         </record>
 
-        <!--asset list view -->
+
         <record model="ir.ui.view" id="asset_tree_view">
             <field name="name">asset.tree</field>
             <field name="model">asset_management.asset</field>
@@ -207,12 +207,12 @@
                     <field name="asset_tag_number"/>
                     <field name="item_id"/>
                     <field name="description"/>
-                    <!--<field name="state"/>-->
+
                 </tree>
             </field>
         </record>
 
-        <!--asset search view -->
+
         <record model="ir.ui.view" id="asset_search_view">
             <field name="name">asset.search</field>
             <field name="model">asset_management.asset</field>
@@ -224,7 +224,6 @@
             </field>
         </record>
 
-        <!--asset action window-->
 
         <record model="ir.actions.act_window" id="asset_list_action">
             <field name="name">Asset</field>
@@ -250,7 +249,7 @@
                   action="asset_list_action"/>
 
 
-        <!--category form view -->
+
         <record model="ir.ui.view" id="category_form_view">
             <field name="name">category.form</field>
             <field name="model">asset_management.category</field>
@@ -273,7 +272,6 @@
                         <group>
                             <group>
                                 <field name="asset_with_category" invisible="1"/>
-                                <!--<field name="depreciation_method" attrs="{'readonly':[('asset_with_category','=',True)]}"/>-->
                                 <field name="ownership_type" attrs="{'readonly':[('asset_with_category','=',True)]}"/>
                             </group>
                             <group>
@@ -308,7 +306,7 @@
             </field>
         </record>
 
-        <!--category list view -->
+
         <record model="ir.ui.view" id="category_tree_view">
             <field name="name">category.tree</field>
             <field name="model">asset_management.category</field>
@@ -320,7 +318,7 @@
             </field>
         </record>
 
-        <!--category search view -->
+
         <record model="ir.ui.view" id="category_search_view">
             <field name="name">category.search</field>
             <field name="model">asset_management.category</field>
@@ -332,7 +330,7 @@
             </field>
         </record>
 
-        <!--category action window-->
+
 
         <record model="ir.actions.act_window" id="category_list_action">
             <field name="name">Category</field>
@@ -350,7 +348,7 @@
                   action="category_list_action"/>
 
 
-        <!--book form view -->
+
         <record model="ir.ui.view" id="book_form_view">
             <field name="name">book.form</field>
             <field name="model">asset_management.book</field>
@@ -416,7 +414,7 @@
             </field>
         </record>
 
-        <!--book list view -->
+
         <record model="ir.ui.view" id="book_tree_view">
             <field name="name">book.tree</field>
             <field name="model">asset_management.book</field>
@@ -429,7 +427,6 @@
             </field>
         </record>
 
-        <!--book search view -->
         <record model="ir.ui.view" id="book_search_view">
             <field name="name">book.search</field>
             <field name="model">asset_management.book</field>
@@ -441,7 +438,7 @@
             </field>
         </record>
 
-        <!--book action window-->
+
 
         <record model="ir.actions.act_window" id="book_list_action">
             <field name="name">Book</field>
@@ -459,14 +456,13 @@
                   action="book_list_action"/>
 
 
-        <!--book-assets form view -->
         <record model="ir.ui.view" id="book_assets_form_view">
             <field name="name">book_assets form</field>
             <field name="model">asset_management.book_assets</field>
             <field name="arch" type="xml">
                 <form string="Book Asset Form" create="false">
                     <header>
-                        <!--<button name="create_assignment" string="assignment" type="object"/>-->
+
                         <button name="%(asset_dep_modify_action)d" string="Modify Depreciation" type="action"
                                 class="oe_highlight" attrs="{'invisible':['|','|',('depreciation_computation','=',False),
                                          ('state','!=','open'),('id','=',False)]}"/>
@@ -477,7 +473,7 @@
                         <button name="compute_depreciation_board" string="Compute Depreciation" type="object"
                                 class="oe_highlight"
                                 attrs="{'invisible':['|','|',('depreciation_computation','=',False),('state','!=','draft'),('id','=',False)]}"/>
-                        <!--<button name="delete_source" type="object" string="delete source"/>-->
+
                         <field name="state" widget="statusbar" statusbar_visible="draft,open"/>
                     </header>
 
@@ -492,7 +488,7 @@
                                 <field name="name" invisible="1"/>
                                 <field name="book_id" options="{'no_create':True}"/>
                                 <field name="asset_id"/>
-                                <!--<label string="  Not Validate" class="oe_inline" attrs="{'invisible':[('asset_state','!=','draft')]}"/>-->
+
                                 <field name="category_id"/>
                                 <field name="current_cost" force_save="1"/>
                                 <field name="original_cost"
@@ -520,7 +516,7 @@
                                 <field name="method_time" force_save="1"/>
                                 <field name="date_in_service"/>
                                 <field name="prorate_date"/>
-                                <!--<field name="prorate_convenction"/>-->
+
                                 <field name="method_number" attrs="{'invisible':[('method_time','=','end')],
                                                 'required':[('method_time','=','number')],'readonly':[('state','!=','draft')]}"
                                        force_save="1"/>
@@ -534,8 +530,6 @@
                                 <field name="source_amount" invisible="1"/>
                                 <field name="assign_change_flag" invisible="1"/>
                                 <field name="percentage" invisible="1"/>
-                                <!--<field name="old_amount" invisible="1"/>-->
-                                <!--<field name="new_amount" invisible="1"/>-->
                             </group>
                         </group>
 
@@ -561,9 +555,7 @@
                                     <tree string="Source Line">
                                         <field name="source_type"/>
                                         <field name="description"/>
-                                        <!--<field name="invoice_id"/>-->
-                                        <!--<field name="invoice_line_ids"/>-->
-                                        <!--<field name="amount"/>-->
+
                                     </tree>
                                 </field>
                             </page>
@@ -602,7 +594,7 @@
             </field>
         </record>
 
-        <!--Book Assets Tree-->
+
         <record model="ir.ui.view" id="book_asset_tree_view">
             <field name="name">book_asset.tree</field>
             <field name="model">asset_management.book_assets</field>
@@ -619,7 +611,7 @@
             </field>
         </record>
 
-        <!--Book Assets Search-->
+
         <record model="ir.ui.view" id="book_asset_search_view">
             <field name="name">assignment.search</field>
             <field name="model">asset_management.book_assets</field>
@@ -634,7 +626,6 @@
         </record>
 
 
-        <!--book-assets action window-->
         <record model="ir.actions.act_window" id="book_assets_list_action">
             <field name="name">Book Asset</field>
             <field name="res_model">asset_management.book_assets</field>
@@ -652,7 +643,7 @@
                   action="book_assets_list_action"/>
 
 
-        <!--assignment form view -->
+
         <record model="ir.ui.view" id="assignment_form_view">
             <field name="name">assignment.form</field>
             <field name="model">asset_management.assignment</field>
@@ -692,7 +683,8 @@
                 </form>
             </field>
         </record>
-        <!--assignment list view -->
+
+
         <record model="ir.ui.view" id="assignment_tree_view">
             <field name="name">assignment.tree</field>
             <field name="model">asset_management.assignment</field>
@@ -706,7 +698,7 @@
             </field>
         </record>
 
-        <!--assignment search view -->
+
         <record model="ir.ui.view" id="assignment_search_view">
             <field name="name">assignment.search</field>
             <field name="model">asset_management.assignment</field>
@@ -718,7 +710,8 @@
             </field>
         </record>
 
-        <!--assignment action window-->
+
+
         <record model="ir.actions.act_window" id="assignment_list_action">
             <field name="name">Assignment</field>
             <field name="res_model">asset_management.assignment</field>
@@ -734,7 +727,7 @@
         <menuitem id="assignment_menu" name="Assignment" parent="asset_management_report_menu"
                   action="assignment_list_action"/>
 
-        <!--source line form view -->
+
         <record model="ir.ui.view" id="source_line_form_view">
             <field name="name">source_line.form</field>
             <field name="model">asset_management.source_line</field>
@@ -743,7 +736,7 @@
                     <sheet>
                         <group>
                             <group>
-                                <!--<field name="name"/>-->
+
                                 <field name="book_assets_id" invisible="1"/>
                                 <field name="asset_id"/>
                                 <field name="book_id"/>
@@ -774,7 +767,8 @@
                 </form>
             </field>
         </record>
-        <!--source line list view -->
+
+
         <record model="ir.ui.view" id="source_line_tree_view">
             <field name="name">source_line.tree</field>
             <field name="model">asset_management.source_line</field>
@@ -787,7 +781,7 @@
             </field>
         </record>
 
-        <!--source line search view -->
+
         <record model="ir.ui.view" id="source_line_search_view">
             <field name="name">source_line.search</field>
             <field name="model">asset_management.source_line</field>
@@ -799,7 +793,7 @@
             </field>
         </record>
 
-        <!--source line action window-->
+
         <record model="ir.actions.act_window" id="source_line_list_action">
             <field name="name">Source Line</field>
             <field name="res_model">asset_management.source_line</field>
@@ -815,7 +809,7 @@
         <menuitem id="source_line_menu" name="Source Line" parent="asset_management_report_menu"
                   action="source_line_list_action"/>
 
-        <!--transaction  form view -->
+
         <record model="ir.ui.view" id="transaction_form_view">
             <field name="name">transaction.form</field>
             <field name="model">asset_management.transaction</field>
@@ -824,7 +818,7 @@
                     <sheet>
                         <group>
                             <group>
-                                <!--<field name="name"/>-->
+
                                 <field name="book_assets_id"/>
                                 <field name="asset_id"/>
                                 <field name="book_id"/>
@@ -854,7 +848,8 @@
                 </form>
             </field>
         </record>
-        <!--transaction list view -->
+
+
         <record model="ir.ui.view" id="transaction_tree_view">
             <field name="name">transaction.tree</field>
             <field name="model">asset_management.transaction</field>
@@ -866,7 +861,7 @@
             </field>
         </record>
 
-        <!--transaction search view -->
+
         <record model="ir.ui.view" id="transaction_search_view">
             <field name="name">transaction.search</field>
             <field name="model">asset_management.transaction</field>
@@ -878,7 +873,6 @@
             </field>
         </record>
 
-        <!--transaction action window-->
         <record model="ir.actions.act_window" id="transaction_list_action">
             <field name="name">Transaction</field>
             <field name="res_model">asset_management.transaction</field>
@@ -895,7 +889,7 @@
                   action="transaction_list_action"/>
 
 
-        <!--Depreciation  form view -->
+
         <record model="ir.ui.view" id="depreciation_form_view">
             <field name="name">depreciation.form</field>
             <field name="model">asset_management.depreciation</field>
@@ -935,7 +929,8 @@
                 </form>
             </field>
         </record>
-        <!--depreciation list view -->
+
+
         <record model="ir.ui.view" id="depreciation_tree_view">
             <field name="name">depreciation.tree</field>
             <field name="model">asset_management.depreciation</field>
@@ -949,7 +944,8 @@
             </field>
         </record>
 
-        <!--depreciation search view -->
+
+
         <record model="ir.ui.view" id="depreciation_search_view">
             <field name="name">depreciation.search</field>
             <field name="model">asset_management.depreciation</field>
@@ -960,7 +956,8 @@
             </field>
         </record>
 
-        <!--depreciation action window-->
+
+
         <record model="ir.actions.act_window" id="depreciation_list_action">
             <field name="name">Depreciation</field>
             <field name="res_model">asset_management.depreciation</field>
@@ -976,7 +973,7 @@
         <menuitem id="depreciation_menu" name="Depreciation" parent="asset_management_report_menu"
                   action="depreciation_list_action"/>
 
-        <!--category books  form view -->
+
         <record model="ir.ui.view" id="category_books_form_view">
             <field name="name">category_books.form</field>
             <field name="model">asset_management.category_books</field>
@@ -1060,7 +1057,7 @@
             </field>
         </record>
 
-        <!--category books tree -->
+
         <record id="category_book_tree" model="ir.ui.view">
             <field name="name">Category Books Tree</field>
             <field name="model">asset_management.category_books</field>
@@ -1073,7 +1070,7 @@
             </field>
         </record>
 
-        <!--Category Books action window-->
+
         <record model="ir.actions.act_window" id="category_books_list_action">
             <field name="name">Category Books</field>
             <field name="res_model">asset_management.category_books</field>
@@ -1086,11 +1083,11 @@
             </field>
         </record>
 
-        <!--Category Books menu item-->
+
         <menuitem id="category_books_menu" name="Category Books" parent="asset_management_report_menu"
                   action="category_books_list_action"/>
 
-        <!--Asset Location Form-->
+
         <record id="asset_management_location_view_form" model="ir.ui.view">
             <field name="name">Asset Location Form</field>
             <field name="model">asset_management.location</field>
@@ -1123,7 +1120,8 @@
                 </form>
             </field>
         </record>
-        <!--Asset Location tree-->
+
+
         <record id="asset_management_location_view_list" model="ir.ui.view">
             <field name="name">Asset.Location.tree</field>
             <field name="model">asset_management.location</field>
@@ -1148,7 +1146,7 @@
             </field>
         </record>
 
-        <!--Asset Location action-->
+
         <record id="asset_management_location_action" model="ir.actions.act_window">
             <field name="name">Asset Location</field>
             <field name="res_model">asset_management.location</field>
@@ -1161,20 +1159,19 @@
             </field>
         </record>
 
-        <!--Asset Location menu item-->
+
         <menuitem id="asset_location_menu" name="Location"
                   parent="main_assetmanagement_menu"/>
 
-        <!--Asset Location menu item child-->
+
         <menuitem name="Location" action="asset_management_location_action"
                   id="asset_management_location_meun"
                   parent="asset_location_menu"/>
 
-        <!--retirement menu item-->
         <menuitem id="retirement_menu" name="Retirement" parent="asset_management_menu"
                   action="retirement_list_action"/>
 
-        <!--retirement type form view-->
+
         <record id="asset_management_retirement_type_view_form" model="ir.ui.view">
             <field name="name">Retirement Type Form</field>
             <field name="model">asset_management.retirement_type</field>
@@ -1222,7 +1219,7 @@
             </field>
         </record>
 
-        <!--retirement type list view-->
+
         <record id="asset_management_retirement_type_tree" model="ir.ui.view">
             <field name="name">Retirement Type Tree</field>
             <field name="model">asset_management.retirement_type</field>
@@ -1235,7 +1232,7 @@
             </field>
         </record>
 
-        <!--retirement type search view-->
+
         <record id="asset_management_retirement_type_search" model="ir.ui.view">
             <field name="name">Retirement Type search</field>
             <field name="model">asset_management.retirement_type</field>
@@ -1248,7 +1245,7 @@
             </field>
         </record>
 
-        <!--retirement type action -->
+
         <record id="asset_management_retirement_type_action" model="ir.actions.act_window">
             <field name="name">Retirement Type Action</field>
             <field name="type">ir.actions.act_window</field>
@@ -1261,20 +1258,18 @@
             </field>
         </record>
 
-        <!--retirement type menu item-->
+
         <menuitem id="retirement_type_menu" name="Retirement Type" parent="asset_management_menu"
                   action="asset_management_retirement_type_action"/>
 
 
-        <!--calendar form view-->
+
         <record id="calender_form_view" model="ir.ui.view">
             <field name="name">Calendar Form View</field>
             <field name="model">asset_management.calendar</field>
             <field name="arch" type="xml">
                 <form string="Calendar Form">
-                    <!--<header>-->
-                    <!--<button name="check_periods" string="check_periods" type="object"/>-->
-                    <!--</header>-->
+
                     <sheet>
                         <div class="oe_left oe_title">
                             <lable for="name" class="oe_edit_only"/>
@@ -1315,7 +1310,6 @@
             </field>
         </record>
 
-        <!--calendar list view-->
         <record id="calendar_tree_view" model="ir.ui.view">
             <field name="name">Calendar List</field>
             <field name="model">asset_management.calendar</field>
@@ -1326,7 +1320,6 @@
             </field>
         </record>
 
-        <!--calendar search view-->
         <record id="calendar_search_view" model="ir.ui.view">
             <field name="name">Calendar Search</field>
             <field name="model">asset_management.calendar</field>
@@ -1337,7 +1330,7 @@
             </field>
         </record>
 
-        <!--calendar line form -->
+
         <record id="calendar_line_form_view" model="ir.ui.view">
             <field name="name">Calendar line Form</field>
             <field name="model">asset_management.calendar_line</field>
@@ -1369,15 +1362,15 @@
         </record>
 
 
-        <!--calendar menu item-->
+
         <menuitem id="calendar_menu" name="Calendar"
                   parent="main_assetmanagement_menu"/>
-        <!--calendar menu item child-->
+
         <menuitem name="Calendar" action="asset_management_calendar_action"
                   id="asset_management_calendar_meun"
                   parent="calendar_menu"/>
 
-        <!--dep run process form-->
+
         <record id="dep_run_process_form_view" model="ir.ui.view">
             <field name="name">dep run process form</field>
             <field name="model">asset_management.deprunprocess</field>
@@ -1419,7 +1412,7 @@
             </field>
         </record>
 
-        <!--dep run process tree-->
+
         <record id="dep_run_process_list_view" model="ir.ui.view">
             <field name="name">dep run process tree</field>
             <field name="model">asset_management.deprunprocess</field>
@@ -1433,7 +1426,7 @@
             </field>
         </record>
 
-        <!--dep run process search-->
+
         <record id="dep_run_process_search_view" model="ir.ui.view">
             <field name="name">dep run process Search</field>
             <field name="model">asset_management.deprunprocess</field>
@@ -1446,7 +1439,7 @@
             </field>
         </record>
 
-        <!--dep run process action-->
+
         <record id="dep_run_process_action" model="ir.actions.act_window">
             <field name="name">dep_run_process action</field>
             <field name="res_model">asset_management.deprunprocess</field>
@@ -1459,7 +1452,7 @@
             </field>
         </record>
 
-        <!--dep run process line  form -->
+
         <record id="dep_run_process_line_form_view" model="ir.ui.view">
             <field name="name">dep run process line form view</field>
             <field name="model">asset_management.deprunprocess_line</field>
@@ -1486,7 +1479,7 @@
         </record>
 
 
-        <!--dep run process menu-->
+
         <menuitem name="Depreciation Run Process" action="dep_run_process_action"
                   id="dep_run_process_meun"
                   parent="calendar_menu"/>
@@ -1512,13 +1505,7 @@
             <field name="implementation">no_gap</field>
         </record>
 
-        <!--<record model="ir.sequence" id="seq_assignment">-->
-        <!--<field name="name">assignment_sequence</field>-->
-        <!--<field name="code">asset_management.assignment.Assignment</field>-->
-        <!--<field name="padding">3</field>-->
-        <!--<field name="number_increment">1</field>-->
-        <!--<field name="implementation">no_gap</field>-->
-        <!--</record>-->
+
 
         <record model="ir.sequence" id="seq_transaction">
             <field name="name">transaction_sequence</field>
