@@ -138,7 +138,7 @@
                             </page>
 
                             <page name="book" string="Book">
-                                <field name="book_assets_id" widget="One2many_list"
+                                <field name="book_assets_id" widget="section_and_note_one2many" mode="tree"
                                        context="{'default_category_id':category_id}">
                                     <tree string="Book Num" delete="false">
                                         <field name="book_id"/>
@@ -161,7 +161,7 @@
                             </page>
 
                             <page name="depreciation" string="Depreciation">
-                                <field name="depreciation_line_ids" widget="One2many_list" readonly="1">
+                                <field name="depreciation_line_ids" widget="section_and_note_one2many" mode="tree" readonly="1">
                                     <tree string="Depreciation" create="false" edit="false" delete="false">
                                         <field name="book_id"/>
                                         <field name="depreciation_date"/>
@@ -177,7 +177,7 @@
                             </page>
 
                             <page name="Transaction" string="Transactions">
-                                <field name="transaction_id" widget="one2many_list" readonly="1">
+                                <field name="transaction_id" widget="section_and_note_one2many" mode="tree" readonly="1">
                                     <tree string="Transaction" create="false" edit="false" delete="false">
                                         <field name="book_id"/>
                                         <field name="trx_type"/>
@@ -281,18 +281,18 @@
                                        attrs="{'readonly':[('asset_with_category','=',True)]}"/>
                             </group>
                         </group>
-                        <notebook>
+                        <notebook colspan="4">
                             <page string="Description">
                                 <field name="description" attrs="{'readonly':[('asset_with_category','=',True)]}"/>
                             </page>
-                            <page name="book" string="Book">
-                                <field name="category_books_id" widget="One2many_list">
+                            <page name="book" string="Book" autofocus="autofocus">
+                                <field name="category_books_id" widget="section_and_note_one2many" mode="tree">
                                     <tree string="book num">
                                         <field name="book_id"/>
-                                        <field name="asset_cost_account"/>
-                                        <field name="asset_clearing_account"/>
-                                        <field name="depreciation_expense_account"/>
-                                        <field name="accumulated_depreciation_account"/>
+                                        <field name="asset_cost_account" can_create="true" can_write="true" modifiers="{}"/>
+                                        <field name="asset_clearing_account" can_create="true" can_write="true" modifiers="{}"/>
+                                        <field name="depreciation_expense_account" can_create="true" can_write="true" modifiers="{}"/>
+                                        <field name="accumulated_depreciation_account" can_create="true" can_write="true" modifiers="{}"/>
                                         <field name="journal_id"/>
                                     </tree>
                                 </field>
@@ -541,7 +541,7 @@
 
                         <notebook>
                             <page name="assignment" string="Assignment">
-                                <field name="assignment_id" widget="One2many_list"
+                                <field name="assignment_id" widget="section_and_note_one2many"
                                        context="{'default_book_assets_id':id}"
                                        attrs="{'readonly':[('state','=','close')]}">
                                     <tree string="Assignment">
@@ -556,7 +556,7 @@
                             </page>
 
                             <page name="source line" string="Source Line">
-                                <field name="source_line_ids" widget="One2many_list"
+                                <field name="source_line_ids" widget="section_and_note_one2many"
                                        attrs="{'readonly':[('state','=','close')]}">
                                     <tree string="Source Line">
                                         <field name="source_type"/>
@@ -569,7 +569,7 @@
                             </page>
 
                             <page name="depreciation" string="Depreciation">
-                                <field name="depreciation_line_ids" widget="One2many_list" readonly="1">
+                                <field name="depreciation_line_ids" widget="section_and_note_one2many" readonly="1">
                                     <tree string="Depreciation" create="false" edit="false" delete="false">
                                         <field name="depreciation_date"/>
                                         <field name="depreciated_value"/>
@@ -584,7 +584,7 @@
                             </page>
 
                             <page string="Transactions" name="transactions">
-                                <field name="transaction_id" widget="One2many_list" readonly="1">
+                                <field name="transaction_id" widget="section_and_note_one2many" readonly="1">
                                     <tree name="Transaction" create="false" edit="false" delete="false">
                                         <field name="trx_type"/>
                                         <field name="trx_date"/>
@@ -981,7 +981,7 @@
             <field name="name">category_books.form</field>
             <field name="model">asset_management.category_books</field>
             <field name="arch" type="xml">
-                <form string="Category Books Form" create="false">
+                <form string="Category Books Form" >
                     <sheet>
                         <group>
 
@@ -1284,7 +1284,7 @@
                         </div>
                         <notebook>
                             <page string="Calendar Lines">
-                                <field name="calendar_lines_id" widget="One2many_list">
+                                <field name="calendar_lines_id" widget="section_and_note_one2many">
                                     <tree string="Calendar Lines" editable="bottom">
                                         <field name="name"/>
                                         <field name="start_date"/>
@@ -1401,7 +1401,7 @@
                         </group>
                         <notebook>
                             <page string="Depreciation Run Process lines">
-                                <field name="dep_run_process_lines" widget="One2many_list" readonly="1">
+                                <field name="dep_run_process_lines" widget="section_and_note_one2many" readonly="1">
                                     <tree string="depreciation line" edit="false" create="false" delete="false">
                                         <field name="sequence"/>
                                         <field name="depreciation_id"/>
