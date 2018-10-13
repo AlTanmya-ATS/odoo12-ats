@@ -138,8 +138,8 @@
                             </page>
 
                             <page name="book" string="Book">
-                                <field name="book_assets_id" widget="section_and_note_one2many" mode="tree"
-                                       context="{'default_category_id':category_id}">
+                                <field name="book_assets_id" widget="One2many_ist" mode="tree"
+                                       context="{'default_category_id':category_id,'form_view_ref':'asset_management.book_assets_one2many_form_view'}" >
                                     <tree string="Book Num" delete="false">
                                         <field name="book_id"/>
                                         <field name="category_id" invisible="1"/>
@@ -161,7 +161,8 @@
                             </page>
 
                             <page name="depreciation" string="Depreciation">
-                                <field name="depreciation_line_ids" widget="section_and_note_one2many" mode="tree" readonly="1">
+                                <field name="depreciation_line_ids" widget="One2many_list" mode="tree" readonly="1"
+                                       context="{'form_view_ref':'asset_management.depreciation_form_one2many_view'}">
                                     <tree string="Depreciation" create="false" edit="false" delete="false">
                                         <field name="book_id"/>
                                         <field name="depreciation_date"/>
@@ -177,7 +178,8 @@
                             </page>
 
                             <page name="Transaction" string="Transactions">
-                                <field name="transaction_id" widget="section_and_note_one2many" mode="tree" readonly="1">
+                                <field name="transaction_id" widget="One2many_list" mode="tree" readonly="1"
+                                       options="{'form_view_ref':'asset_management.transaction_form_one2many_view'}">
                                     <tree string="Transaction" create="false" edit="false" delete="false">
                                         <field name="book_id"/>
                                         <field name="trx_type"/>
@@ -283,14 +285,15 @@
                             <page string="Description">
                                 <field name="description" attrs="{'readonly':[('asset_with_category','=',True)]}"/>
                             </page>
-                            <page name="book" string="Book" autofocus="autofocus">
-                                <field name="category_books_id" widget="section_and_note_one2many" mode="tree">
+                            <page name="book" string="Book">
+                                <field name="category_books_id" widget="One2many_list"
+                                       context="{'form_view_ref':'asset_management.category_books_one2many_form_view'}">
                                     <tree string="book num">
                                         <field name="book_id"/>
-                                        <field name="asset_cost_account" can_create="true" can_write="true" modifiers="{}"/>
-                                        <field name="asset_clearing_account" can_create="true" can_write="true" modifiers="{}"/>
-                                        <field name="depreciation_expense_account" can_create="true" can_write="true" modifiers="{}"/>
-                                        <field name="accumulated_depreciation_account" can_create="true" can_write="true" modifiers="{}"/>
+                                        <field name="asset_cost_account"/>
+                                        <field name="asset_clearing_account" />
+                                        <field name="depreciation_expense_account" />
+                                        <field name="accumulated_depreciation_account"/>
                                         <field name="journal_id"/>
                                     </tree>
                                 </field>
@@ -536,7 +539,7 @@
                         <notebook>
                             <page name="assignment" string="Assignment">
                                 <field name="assignment_id" widget="section_and_note_one2many"
-                                       context="{'default_book_assets_id':id}"
+                                       context="{'default_book_assets_id':id,'form_view_ref':'asset_management.assignment_form_one2many_view'}"
                                        attrs="{'readonly':[('state','=','close')]}">
                                     <tree string="Assignment">
                                         <field name="responsible_id"/>
@@ -551,6 +554,7 @@
 
                             <page name="source line" string="Source Line">
                                 <field name="source_line_ids" widget="section_and_note_one2many"
+                                       context="{'form_view_ref':'asset_management.source_line_one2many_form_view'}"
                                        attrs="{'readonly':[('state','=','close')]}">
                                     <tree string="Source Line">
                                         <field name="source_type"/>
@@ -561,7 +565,8 @@
                             </page>
 
                             <page name="depreciation" string="Depreciation">
-                                <field name="depreciation_line_ids" widget="section_and_note_one2many" readonly="1">
+                                <field name="depreciation_line_ids" widget="One2many_list" readonly="1"
+                                     context="{'form_view_ref':'asset_management.depreciation_form_one2many_view'}">
                                     <tree string="Depreciation" create="false" edit="false" delete="false">
                                         <field name="depreciation_date"/>
                                         <field name="depreciated_value"/>
@@ -576,7 +581,8 @@
                             </page>
 
                             <page string="Transactions" name="transactions">
-                                <field name="transaction_id" widget="section_and_note_one2many" readonly="1">
+                                <field name="transaction_id" widget="One2many_list" readonly="1"
+                                context="{'form_view_ref':'asset_management.transaction_form_one2many_view'}">
                                     <tree name="Transaction" create="false" edit="false" delete="false">
                                         <field name="trx_type"/>
                                         <field name="trx_date"/>
@@ -732,7 +738,7 @@
             <field name="name">source_line.form</field>
             <field name="model">asset_management.source_line</field>
             <field name="arch" type="xml">
-                <form string="Source_Line Form" create="false">
+                <form string="Source Line Form" create="false">
                     <sheet>
                         <group>
                             <group>
@@ -1181,7 +1187,7 @@
                         <div class="oe_left oe_title">
                             <lable for="name" class="oe_edit_only"/>
                             <h1>
-                                <field name="name" placeholder="Calendar's Name"/>
+                                <field name="name" placeholder="Retirement Type's Name"/>
                             </h1>
                         </div>
                         <group>
@@ -1279,12 +1285,30 @@
                         </div>
                         <notebook>
                             <page string="Calendar Lines">
-                                <field name="calendar_lines_id" widget="section_and_note_one2many">
+                                <field name="calendar_lines_id" widget="One2many_list" mode="tree,form">
                                     <tree string="Calendar Lines" editable="bottom">
                                         <field name="name"/>
                                         <field name="start_date"/>
                                         <field name="end_date"/>
                                     </tree>
+                                    <form>
+                                        <sheet>
+                                            <div class="oe_left oe_title">
+                                                <lable for="name" class="oe_edit_only"/>
+                                                <h1>
+                                                    <field name="name" placeholder="Calendar's Name"/>
+                                                </h1>
+                                            </div>
+                                            <group>
+                                                <group>
+                                                    <field name="start_date"/>
+                                                </group>
+                                                <group>
+                                                    <field name="end_date"/>
+                                                </group>
+                                            </group>
+                                        </sheet>
+                                    </form>
                                 </field>
                             </page>
                         </notebook>
@@ -1352,11 +1376,11 @@
                             </group>
                         </group>
                     </sheet>
-                    <div class="oe_chatter">
-                        <field name="message_follower_ids" widget="mail_followers"/>
-                        <field name="activity_ids" widget="mail_activity"/>
-                        <field name="message_ids" widget="mail_thread"/>
-                    </div>
+                    <!--<div class="oe_chatter">-->
+                        <!--<field name="message_follower_ids" widget="mail_followers"/>-->
+                        <!--<field name="activity_ids" widget="mail_activity"/>-->
+                        <!--<field name="message_ids" widget="mail_thread"/>-->
+                    <!--</div>-->
                 </form>
             </field>
         </record>
@@ -1394,11 +1418,24 @@
                         </group>
                         <notebook>
                             <page string="Depreciation Run Process lines">
-                                <field name="dep_run_process_lines" widget="section_and_note_one2many" readonly="1">
+                                <field name="dep_run_process_lines" widget="One2many_list" readonly="1" mode="tree,form">
                                     <tree string="depreciation line" edit="false" create="false" delete="false">
                                         <field name="sequence"/>
                                         <field name="depreciation_id"/>
                                     </tree>
+                                    <form>
+                                         <sheet>
+                                            <group>
+                                                <group>
+                                                    <field name="sequence"/>
+                                                </group>
+                                                <group>
+                                                    <field name="dep_run_process_id"/>
+                                                    <field name="depreciation_id"/>
+                                                </group>
+                                            </group>
+                                        </sheet>
+                                    </form>
                                 </field>
                             </page>
                         </notebook>

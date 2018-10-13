@@ -1484,7 +1484,7 @@ class Retirement(models.Model):
     book_id = fields.Many2one('asset_management.book', on_delete='cascade', required=True,
                               domain=[('active', '=', True)], track_visibility='always')
     asset_id = fields.Many2one('asset_management.asset', on_delete='cascade', required=True, track_visibility='always')
-    retire_date = fields.Date(string='Retire Date', default=datetime.today(), track_visibility='onchange')
+    retire_date = fields.Date(string='Retire Date', default= lambda self : date.today(), track_visibility='onchange')
     comments = fields.Text(string="Comments", track_visibility='onchange')
     gain_loss_amount = fields.Float(track_visibility='onchange', readonly=True)
     proceeds_of_sale = fields.Float(track_visibility='onchange')
