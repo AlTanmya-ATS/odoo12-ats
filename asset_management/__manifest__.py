@@ -29,8 +29,10 @@
         'security/ir.model.access.csv',
         'views/resources.xml',
         'wizard/asset_modify_view.xml',
-        'views/form_views.xml'
+        'views/form_views.xml',
+        'views/inherited_form_view.xml',
         'views/views.xml',
+        'views/menuitem_view.xml',
         'views/templates.xml',
         # 'views/res_config_setting.xml',
         'wizard/mas_entries.xml',

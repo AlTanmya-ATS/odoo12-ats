@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit retirement Form View to add mail followers-->
+    <record id="retirement_inherited_form_view" model="ir.ui.view">
+        <field name="name">retirement form</field>
+        <field name="model">asset_management.retirement</field>
+        <field name="inherit_id" ref="retirement_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit asset Form View to add mail followers -->
+    <record id="asset_inherited_form_view" model="ir.ui.view">
+        <field name="name">asset form</field>
+        <field name="model">asset_management.asset</field>
+        <field name="inherit_id" ref="asset_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit category Form View to add mail followers -->
+    <record id="category_inherited_form_view" model="ir.ui.view">
+        <field name="name">category form</field>
+        <field name="model">asset_management.category</field>
+        <field name="inherit_id" ref="category_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+
+    <!-- Inherit book  Form View to add mail followers -->
+    <record id="book_inherited_form_view" model="ir.ui.view">
+        <field name="name">book form</field>
+        <field name="model">asset_management.book</field>
+        <field name="inherit_id" ref="book_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit book asset Form View to add mail followers -->
+    <record id="book_asset_inherited_form_view" model="ir.ui.view">
+        <field name="name">book asset form</field>
+        <field name="model">asset_management.book_assets</field>
+        <field name="inherit_id" ref="book_assets_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit assignment Form View to add mail followers -->
+    <record id="assignment_inherited_form_view" model="ir.ui.view">
+        <field name="name">assignment form</field>
+        <field name="model">asset_management.assignment</field>
+        <field name="inherit_id" ref="assignment_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit source line Form View to add mail followers -->
+    <record id="source_line_inherited_form_view" model="ir.ui.view">
+        <field name="name">source line form</field>
+        <field name="model">asset_management.source_line</field>
+        <field name="inherit_id" ref="source_line_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+        <!-- Inherit transaction Form View to add mail followers -->
+    <record id="transaction_inherited_form_view" model="ir.ui.view">
+        <field name="name">transaction form</field>
+        <field name="model">asset_management.transaction</field>
+        <field name="inherit_id" ref="transaction_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+       <!-- Inherit depreciation Form View to add mail followers -->
+    <record id="depreciation_inherited_form_view" model="ir.ui.view">
+        <field name="name">depreciation form</field>
+        <field name="model">asset_management.depreciation</field>
+        <field name="inherit_id" ref="depreciation_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+       <!-- Inherit category books Form View to add mail followers -->
+    <record id="category_books_inherited_form_view" model="ir.ui.view">
+        <field name="name">category books  form</field>
+        <field name="model">asset_management.category_books</field>
+        <field name="inherit_id" ref="category_books_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+       <!-- Inherit retirement type Form View to add mail followers -->
+    <record id="retirement_type_inherited_form_view" model="ir.ui.view">
+        <field name="name">Retirement Type Form </field>
+        <field name="model">asset_management.retirement_type</field>
+        <field name="inherit_id" ref="asset_management_retirement_type_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+         <!-- Inherit calender Form View to add mail followers -->
+    <record id="calender_inherited_form_view" model="ir.ui.view">
+        <field name="name">Calender Form </field>
+        <field name="model">asset_management.calendar</field>
+        <field name="inherit_id" ref="calender_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+         <!-- Inherit depreciation run process Form View to add mail followers -->
+    <record id="dep_run_process_inherited_form_view" model="ir.ui.view">
+        <field name="name">depreciation run process Form </field>
+        <field name="model">asset_management.deprunprocess</field>
+        <field name="inherit_id" ref="dep_run_process_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+
+
+</odoo>

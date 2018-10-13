@@ -51,11 +51,19 @@ class Asset(models.Model):
     #                 self.serial_flag= True
     #             else:
     #                 self.serial_flag = False
-    #     @api.constrains('asset_serial_number','asset_tag_number')
-    #     def unique_serail_tag_number_on_asset(self):
-    #         for rec in self:
-    #             serail=self.env['asset+management.asset'].search(['asset_serial_number','=',rec.asset_serial_number])
-    #             for tag in rec.asset_tag_number:
+
+    # @api.constrains('asset_serial_number','asset_tag_number')
+    # def unique_serial_tag_number_on_asset(self):
+    #     for rec in self:
+    #         query = """select id
+    #                     from asset_management.mode
+    #                     where asset_serial_number = %s
+    #                      and asset_tag_number in %s """
+    #         self._cr.execute(query,record.asset_serial_number, (tuple(record.asset_tag_number.ids)))
+    #         for id in self._cr.fetchall():
+    #             if id :
+    #                 raise ValidationError(_("not unique"))
+
 
     @api.onchange('category_id')
     def _get_default_values_for_asset(self):
@@ -129,7 +137,7 @@ class Asset(models.Model):
                     old_moved_lines += deprecation
 
             for trx in trx_lines:
-                if not trx.move_check:
+                if not trx.move_check and not trx.asset_id.asset_type == 'expense':
                     if trx.trx_type == 'full_retirement' or trx.trx_type == 'partial_retirement':
                         trx.generate_retirement_journal()
                         new_moved_lines += trx
@@ -226,6 +234,7 @@ class Book(models.Model):
                                                track_visibility='onchange')
     loss_analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic tags',
                                              track_visibility='onchange')
+    allow_future_transaction = fields.Boolean(track_visibility='onchange')
 
     @api.multi
     def open_next_period(self, period):
@@ -350,7 +359,7 @@ class BookAssets(models.Model):
     net_book_value = fields.Float(compute='_compute_net_book_value', track_visibility='onchange')
     current_cost_from_retir = fields.Boolean()
     transaction_id = fields.One2many('asset_management.transaction', inverse_name="book_assets_id", on_delete="cascade")
-    allow_future_transaction = fields.Boolean(track_visibility='onchange')
+
     assign_change_flag = fields.Boolean()
 
     @api.onchange('method_progress_factor')
@@ -402,15 +411,16 @@ class BookAssets(models.Model):
 
     @api.constrains('method_progress_factor', 'date_in_service', 'current_cost')
     def _check_constraints(self):
-        if self.date_in_service > self.book_id.calendar_line_id.end_date and not self.allow_future_transaction:
+        if self.date_in_service > self.book_id.calendar_line_id.end_date and not self.book_id.allow_future_transaction:
             raise ValidationError(
-                _('In order to add assets in future period Allow future transaction must set to True'))
+                _(
+                    'In order to add assets in future period Allow Future Transaction in ' + self.book_id.name + ' must set to True'))
 
         if self.method_progress_factor < 0:
-            raise ValidationError(_('Degressive Factor must be positive'))
+            raise ValidationError(_('Degressive Factor must be Positive'))
 
         if self.current_cost < 0:
-            raise ValidationError(_('Current Cost can not be negative'))
+            raise ValidationError(_('Current Cost can not be Negative'))
 
     @api.depends('accumulated_value', 'current_cost')
     def _compute_net_book_value(self):
@@ -868,7 +878,6 @@ class BookAssets(models.Model):
                 if record.responsible_id:
                     responsable.append(record.responsible_id.name)
                 location.append(record.location_id.name)
-
                 # if record.date_from:
                 #     date=record.date_from
                 # else:
@@ -884,7 +893,8 @@ class BookAssets(models.Model):
                 'trx_details': 'Responsible : ' + str(responsable) + '\nLocation : ' + str(location)
 
             })
-            self.compute_depreciation_board()
+            if self.asset_id.asset_type == 'capitalize':
+                self.compute_depreciation_board()
 
     @api.multi
     def set_to_draft(self):
@@ -1484,7 +1494,7 @@ class Retirement(models.Model):
     book_id = fields.Many2one('asset_management.book', on_delete='cascade', required=True,
                               domain=[('active', '=', True)], track_visibility='always')
     asset_id = fields.Many2one('asset_management.asset', on_delete='cascade', required=True, track_visibility='always')
-    retire_date = fields.Date(string='Retire Date', default= lambda self : date.today(), track_visibility='onchange')
+    retire_date = fields.Date(string='Retire Date', default=lambda self: date.today(), track_visibility='onchange')
     comments = fields.Text(string="Comments", track_visibility='onchange')
     gain_loss_amount = fields.Float(track_visibility='onchange', readonly=True)
     proceeds_of_sale = fields.Float(track_visibility='onchange')
