@@ -35,7 +35,7 @@
             <field name="context" eval="{'search_default_my_retirement': 1}"/>
             <field name="view_ids" eval="[(5, 0, 0),
                     (0, 0, {'view_mode': 'tree', 'view_id': ref('retirement_tree_view')}),
-                    (0, 0, {'view_mode': 'form', 'view_id': ref('retirement_inherited_form_view')})]"/>
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('retirement_form_view')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first retirement
                 </p>
@@ -79,7 +79,7 @@
             <field name="context" eval="{'search_default_my_asset': 1}"/>
             <field name="view_ids" eval="[(5,0,0),
                     (0,0,{'view_mode':'tree','view_id':ref('asset_tree_view')}),
-                    (0,0,{'view_mode':'form' , 'view_id':ref('asset_inherited_form_view')})]"/>
+                    (0,0,{'view_mode':'form' , 'view_id':ref('asset_form_view')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first asset
                 </p>
@@ -119,7 +119,7 @@
             <field name="context" eval="{'search_default_my_category': 1}"/>
             <field name="view_ids" eval="[(5,0,0),
                     (0,0,{'view_mode':'tree','view_id':ref('category_tree_view')}),
-                    (0,0,{'view_mode':'form' , 'view_id':ref('category_inherited_form_view')})]"/>
+                    (0,0,{'view_mode':'form' , 'view_id':ref('category_form_view')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first category
                 </p>
@@ -159,7 +159,7 @@
             <field name="view_mode">tree,form</field>
             <field name="view_ids" eval="[(5,0,0),
                     (0,0,{'view_mode':'tree','view_id':ref('book_tree_view')}),
-                    (0,0,{'view_mode':'form' , 'view_id':ref('book_inherited_form_view')})]"/>
+                    (0,0,{'view_mode':'form' , 'view_id':ref('book_form_view')})]"/>
             <field name="context" eval="{'search_default_my_book': 1}"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first book
@@ -207,7 +207,7 @@
             <field name="context" eval="{'search_default_my_book_assets': 1}"/>
             <field name="view_ids" eval="[(5, 0, 0),
                     (0, 0, {'view_mode': 'tree', 'view_id': ref('book_asset_tree_view')}),
-                    (0, 0, {'view_mode': 'form', 'view_id': ref('book_asset_inherited_form_view')})]"/>
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('book_asset_form_view')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first book assets
                 </p>
@@ -249,7 +249,7 @@
             <field name="context" eval="{'search_default_my_assignment': 1}"/>
             <field name="view_ids" eval="[(5, 0, 0),
                 (0, 0, {'view_mode': 'tree', 'view_id': ref('assignment_tree_view')}),
-                (0, 0, {'view_mode': 'form', 'view_id': ref('assignment_inherited_form_view')})]"/>
+                (0, 0, {'view_mode': 'form', 'view_id': ref('assignment_form_view')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first assignment
                 </p>
@@ -290,7 +290,7 @@
             <field name="context" eval="{'search_default_my_source line': 1}"/>
             <field name="view_ids" eval="[(5, 0, 0),
                     (0, 0, {'view_mode': 'tree', 'view_id': ref('source_line_tree_view')}),
-                    (0, 0, {'view_mode': 'form', 'view_id': ref('source_line_inherited_form_view')})]"/>
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('source_line_form_view')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first source line
                 </p>
@@ -330,7 +330,7 @@
             <field name="context" eval="{'search_default_my_transaction': 1}"/>
             <field name="view_ids" eval="[(5, 0, 0),
                 (0, 0, {'view_mode': 'tree', 'view_id': ref('transaction_tree_view')}),
-                (0, 0, {'view_mode': 'form', 'view_id': ref('transaction_inherited_form_view')})]"/>
+                (0, 0, {'view_mode': 'form', 'view_id': ref('transaction_form_view')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first transaction
                 </p>
@@ -371,7 +371,7 @@
             <field name="context" eval="{'search_default_my_depreciation': 1}"/>
             <field name="view_ids" eval="[(5, 0, 0),
                     (0, 0, {'view_mode': 'tree', 'view_id': ref('depreciation_tree_view')}),
-                    (0, 0, {'view_mode': 'form', 'view_id': ref('depreciation_inherited_form_view')})]"/>
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('depreciation_form_view')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first depreciation
                 </p>
@@ -400,7 +400,7 @@
             <field name="context" eval="{'search_default_my_category_books': 1}"/>
             <field name="view_ids" eval="[(5, 0, 0),
                     (0, 0, {'view_mode': 'tree', 'view_id': ref('category_book_tree')}),
-                    (0, 0, {'view_mode': 'form', 'view_id': ref('category_books_inherited_form_view')})]"/>
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('category_books_form_view')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first category books
                 </p>
@@ -440,6 +440,9 @@
             <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
             <field name="context" eval="{'search_default_my_location': 1}"/>
+                        <field name="view_ids" eval="[(5, 0, 0),
+                    (0, 0, {'view_mode': 'tree', 'view_id': ref('asset_management_location_search')}),
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('asset_management_location_view_form')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first Location
                 </p>
@@ -480,7 +483,7 @@
             <field name="view_mode">tree,form</field>
             <field name="view_ids" eval="[(5, 0, 0),
                     (0, 0, {'view_mode': 'tree', 'view_id': ref('asset_management_retirement_type_tree')}),
-                    (0, 0, {'view_mode': 'form', 'view_id': ref('retirement_type_inherited_form_view')})]"/>
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('retirement_type_form_view')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">
                     Create the first Retirement Type
@@ -518,7 +521,7 @@
             <field name="view_mode">tree,form</field>
             <field name="view_ids" eval="[(5,0,0),
                     (0,0,{'view_mode':'tree','view_id':ref('calendar_tree_view')}),
-                    (0,0,{'view_mode':'form' , 'view_id':ref('calender_inherited_form_view')})]"/>
+                    (0,0,{'view_mode':'form' , 'view_id':ref('calender_form_view')})]"/>
             <field name="context" eval="{'search_default_my_calendar': 1}"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first calendar
@@ -561,7 +564,7 @@
             <field name="view_mode">tree,form</field>
             <field name="view_ids" eval="[(5, 0, 0),
                     (0, 0, {'view_mode': 'tree', 'view_id': ref('dep_run_process_list_view')}),
-                    (0, 0, {'view_mode': 'form', 'view_id': ref('dep_run_process_inherited_form_view')})]"/>
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('dep_run_process_form_view')})]"/>
             <field name="context" eval="{'search_default_my_deprunprocess': 1}"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first depreciation run process

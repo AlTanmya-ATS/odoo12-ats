@@ -43,7 +43,7 @@ class Asset(models.Model):
         ('expense', 'Expense'),
         ('capitalize', 'Capitalize')
     ], required=True, track_visibility='onchange')
-
+    asset_one2many_view = fields.Boolean(default = True)
 
 
     #     @api.onchange('item_id')
@@ -188,7 +188,7 @@ class Category(models.Model):
                                            default='linear', track_visibility='onchange')
     asset_with_category = fields.Boolean()
     active = fields.Boolean(default=True, track_visibility='onchange')
-    for_view = fields.Boolean(default = True)
+    asset_one2many_view = fields.Boolean(default = True)
     _sql_constraints = [
         ('category_name', 'UNIQUE(name)', 'Category name already exist..!')
     ]
@@ -362,8 +362,23 @@ class BookAssets(models.Model):
     net_book_value = fields.Float(compute='_compute_net_book_value', track_visibility='onchange')
     current_cost_from_retir = fields.Boolean()
     transaction_id = fields.One2many('asset_management.transaction', inverse_name="book_assets_id", on_delete="cascade")
-
     assign_change_flag = fields.Boolean()
+    book_one2many_view = fields.Boolean(default=True)
+
+    @api.model
+    def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
+        res = super(BookAssets, self).fields_view_get(
+            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+        if self._context.get('asset_one2many_form'):
+            doc = etree.XML(res['arch'])
+            for node in doc.xpath("//field[@name='message_follower_ids']"):
+                    node.set('widget', "")
+            for node in doc.xpath("//field[@name='activity_ids']"):
+                    node.set('widget', "")
+            for node in doc.xpath("//field[@name='message_ids']"):
+                    node.set('widget', "")
+            res['arch'] = etree.tostring(doc, encoding='unicode')
+        return res
 
     @api.onchange('method_progress_factor')
     def _warning_for_dgressive_factor(self):
@@ -1163,6 +1178,22 @@ class Assignment(models.Model):
     depreciation_expense_analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic tags',
                                                              track_visibility='onchange')
 
+
+    @api.model
+    def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
+        res = super(Assignment, self).fields_view_get(
+            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+        if self._context.get('book_one2many_view'):
+            doc = etree.XML(res['arch'])
+            for node in doc.xpath("//field[@name='message_follower_ids']"):
+                node.set('widget', "")
+            for node in doc.xpath("//field[@name='activity_ids']"):
+                node.set('widget', "")
+            for node in doc.xpath("//field[@name='message_ids']"):
+                node.set('widget', "")
+            res['arch'] = etree.tostring(doc, encoding='unicode')
+        return res
+
     @api.onchange('book_id')
     def _dep_expense_domain(self):
         for record in self:
@@ -1275,6 +1306,21 @@ class SourceLine(models.Model):
     description = fields.Text(track_visibility='onchange')
 
     @api.model
+    def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
+        res = super(SourceLine, self).fields_view_get(
+            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+        if self._context.get('book_one2many_view'):
+            doc = etree.XML(res['arch'])
+            for node in doc.xpath("//field[@name='message_follower_ids']"):
+                node.set('widget', "")
+            for node in doc.xpath("//field[@name='activity_ids']"):
+                node.set('widget', "")
+            for node in doc.xpath("//field[@name='message_ids']"):
+                node.set('widget', "")
+            res['arch'] = etree.tostring(doc, encoding='unicode')
+        return res
+
+    @api.model
     def create(self, values):
         values['name'] = self.env['ir.sequence'].next_by_code('asset_management.source_line.SourceLine')
         return super(SourceLine, self).create(values)
@@ -1368,6 +1414,22 @@ class Depreciation(models.Model):
     dep_run_process_id = fields.Many2one('asset_management.deprunprocess', on_delete='cascade',
                                          track_visibility='onchange')
     period_id = fields.Many2one('asset_management.calendar_line', track_visibility='onchange')
+
+    @api.model
+    def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
+        res = super(Depreciation, self).fields_view_get(
+            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+        if self._context.get('asset_one2many_form') or self._context.get('book_one2many_form'):
+            doc = etree.XML(res['arch'])
+            for node in doc.xpath("//field[@name='message_follower_ids']"):
+                    node.set('widget', "")
+            for node in doc.xpath("//field[@name='activity_ids']"):
+                    node.set('widget', "")
+            for node in doc.xpath("//field[@name='message_ids']"):
+                    node.set('widget', "")
+            res['arch'] = etree.tostring(doc, encoding='unicode')
+        return res
+
 
     @api.multi
     @api.depends('move_id')
@@ -1721,13 +1783,15 @@ class CategoryBooks(models.Model):
     def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
         res = super(CategoryBooks, self).fields_view_get(
             view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
-        if self._context.get('for_view'):
+        if self._context.get('asset_one2many_view'):
             doc = etree.XML(res['arch'])
             for node in doc.xpath("//field[@name='message_follower_ids']"):
-                if self._context.get('for_view'):
-                    node.set('widget', "mail_followers")
+                node.set('widget', "")
+            for node in doc.xpath("//field[@name='activity_ids']"):
+                node.set('widget', "")
+            for node in doc.xpath("//field[@name='message_ids']"):
+                node.set('widget', "")
             res['arch'] = etree.tostring(doc, encoding='unicode')
-
         return res
 
     @api.model
@@ -1797,6 +1861,21 @@ class Transaction(models.Model):
     cost = fields.Float('Current Value', track_visibility='onchange')
     old_cost = fields.Float('Old Current Value', track_visibility='onchange')
     retirement_id = fields.Many2one('asset_management.retirement', track_visibility='onchange')
+
+    @api.model
+    def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
+        res = super(Transaction, self).fields_view_get(
+            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+        if self._context.get('asset_one2many_form') or self._context.get('book_one2many_field'):
+            doc = etree.XML(res['arch'])
+            for node in doc.xpath("//field[@name='message_follower_ids']"):
+                    node.set('widget', "")
+            for node in doc.xpath("//field[@name='activity_ids']"):
+                    node.set('widget', "")
+            for node in doc.xpath("//field[@name='message_ids']"):
+                    node.set('widget', "")
+            res['arch'] = etree.tostring(doc, encoding='unicode')
+        return res
 
     @api.multi
     @api.depends('move_id')
@@ -2309,6 +2388,7 @@ class Calendar(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     name = fields.Char(required=True, track_visibility='always')
     calendar_lines_id = fields.One2many('asset_management.calendar_line', 'calendar_id', on_delete='cascade')
+    calender_one2many_view = fields.Boolean(default=True)
 
     @api.model
     def create(self, values):
@@ -2343,6 +2423,21 @@ class CalendarLines(models.Model):
     end_date = fields.Date(required=True, track_visibility='onchange')
     calendar_id = fields.Many2one('asset_management.calendar', on_delete="cascade", track_visibility='onchange')
 
+    @api.model
+    def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
+        res = super(CalendarLines, self).fields_view_get(
+            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+        if self._context.get('calender_one2many_view'):
+            doc = etree.XML(res['arch'])
+            for node in doc.xpath("//field[@name='message_follower_ids']"):
+                node.set('widget', "")
+            for node in doc.xpath("//field[@name='activity_ids']"):
+                node.set('widget', "")
+            for node in doc.xpath("//field[@name='message_ids']"):
+                node.set('widget', "")
+            res['arch'] = etree.tostring(doc, encoding='unicode')
+        return res
+
     @api.constrains('start_date', 'end_date')
     def _check_dates(self):
         for record in self:
@@ -2365,6 +2460,7 @@ class DepRunProcess(models.Model):
     book_id = fields.Many2one('asset_management.book', on_delete="cascade", track_visibility='onchange')
     dep_run_process_lines = fields.One2many('asset_management.deprunprocess_line', 'dep_run_process_id')
     reinstall_flag = fields.Boolean()
+    dep_on2many_view = fields.Boolean(default=True)
 
     @api.model
     def create(self, vals):
@@ -2421,3 +2517,18 @@ class DepRunProcessLine(models.Model):
         for record in self:
             raise ValidationError(_('Depreciation Run Process history can not be deleted '))
         super(DepRunProcessLine, self).unlink()
+
+    @api.model
+    def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
+        res = super(DepRunProcessLine, self).fields_view_get(
+            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+        if self._context.get('dep_on2many_view'):
+            doc = etree.XML(res['arch'])
+            for node in doc.xpath("//field[@name='message_follower_ids']"):
+                node.set('widget', "")
+            for node in doc.xpath("//field[@name='activity_ids']"):
+                node.set('widget', "")
+            for node in doc.xpath("//field[@name='message_ids']"):
+                node.set('widget', "")
+            res['arch'] = etree.tostring(doc, encoding='unicode')
+        return res

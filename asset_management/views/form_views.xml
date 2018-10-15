@@ -46,7 +46,11 @@
                         </page>
                     </notebook>
                 </sheet>
-
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
@@ -125,6 +129,11 @@
                         </group>
                     </group>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
@@ -161,6 +170,11 @@
                         </group>
                     </group>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
@@ -196,6 +210,11 @@
                         </group>
                     </group>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
@@ -232,6 +251,11 @@
                         </group>
                     </group>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
@@ -267,6 +291,11 @@
                         </group>
                     </group>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
@@ -345,13 +374,14 @@
                             <field name="source_amount" invisible="1"/>
                             <field name="assign_change_flag" invisible="1"/>
                             <field name="percentage" invisible="1"/>
+                            <field name="book_one2many_view"/>
                         </group>
                     </group>
 
                     <notebook>
                         <page name="assignment" string="Assignment">
                             <field name="assignment_id" widget="section_and_note_one2many"
-                                   context="{'default_book_assets_id':id,'form_view_ref':'asset_management.assignment_form_one2many_view'}"
+                                   context="{'default_book_assets_id':id,'form_view_ref':'asset_management.assignment_form_one2many_view','book_one2many_view':book_one2many_view}"
                                    attrs="{'readonly':[('state','=','close')]}">
                                 <tree string="Assignment">
                                     <field name="responsible_id"/>
@@ -366,7 +396,7 @@
 
                         <page name="source line" string="Source Line">
                             <field name="source_line_ids" widget="section_and_note_one2many"
-                                   context="{'form_view_ref':'asset_management.source_line_one2many_form_view'}"
+                                   context="{'form_view_ref':'asset_management.source_line_one2many_form_view','book_one2many_view':book_one2many_view}"
                                    attrs="{'readonly':[('state','=','close')]}">
                                 <tree string="Source Line">
                                     <field name="source_type"/>
@@ -378,7 +408,7 @@
 
                         <page name="depreciation" string="Depreciation">
                             <field name="depreciation_line_ids" widget="One2many_list" readonly="1"
-                                   context="{'form_view_ref':'asset_management.depreciation_form_one2many_view'}">
+                                   context="{'form_view_ref':'asset_management.depreciation_form_one2many_view','book_one2many_view':book_one2many_view}">
                                 <tree string="Depreciation" create="false" edit="false" delete="false">
                                     <field name="depreciation_date"/>
                                     <field name="depreciated_value"/>
@@ -394,7 +424,7 @@
 
                         <page string="Transactions" name="transactions">
                             <field name="transaction_id" widget="One2many_list" readonly="1"
-                                   context="{'form_view_ref':'asset_management.transaction_form_one2many_view'}">
+                                   context="{'form_view_ref':'asset_management.transaction_form_one2many_view','book_one2many_view':book_one2many_view}">
                                 <tree name="Transaction" create="false" edit="false" delete="false">
                                     <field name="trx_type"/>
                                     <field name="trx_date"/>
@@ -403,6 +433,11 @@
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
@@ -442,8 +477,8 @@
                             <field name="is_new"/>
                             <field name="ownership_type"/>
                             <field name="asset_serial_number"/>
-
                             <field name="asset_tag_number" widget="many2many_tags"/>
+                            <field name="asset_one2many_view"/>
                         </group>
                     </group>
 
@@ -454,7 +489,7 @@
 
                         <page name="book" string="Book">
                             <field name="book_assets_id" widget="One2many_ist" mode="tree"
-                                   context="{'default_category_id':category_id,'form_view_ref':'asset_management.book_assets_form_view'}">
+                                   context="{'default_category_id':category_id,'form_view_ref':'asset_management.book_assets_form_view','asset_one2many_view':asset_one2many_view}">
                                 <tree string="Book Num" delete="false">
                                     <field name="book_id"/>
                                     <field name="category_id" invisible="1"/>
@@ -477,7 +512,7 @@
 
                         <page name="depreciation" string="Depreciation">
                             <field name="depreciation_line_ids" widget="One2many_list" mode="tree" readonly="1"
-                                   context="{'form_view_ref':'asset_management.depreciation_form_view'}">
+                                   context="{'form_view_ref':'asset_management.depreciation_form_view','asset_one2many_view':asset_one2many_view}">
                                 <tree string="Depreciation" create="false" edit="false" delete="false">
                                     <field name="book_id"/>
                                     <field name="depreciation_date"/>
@@ -494,7 +529,7 @@
 
                         <page name="Transaction" string="Transactions">
                             <field name="transaction_id" widget="One2many_list" mode="tree" readonly="1"
-                                   options="{'form_view_ref':'asset_management.transaction_form_view'}">
+                                   options="{'form_view_ref':'asset_management.transaction_form_view','asset_one2many_view':asset_one2many_view}">
                                 <tree string="Transaction" create="false" edit="false" delete="false">
                                     <field name="book_id"/>
                                     <field name="trx_type"/>
@@ -504,6 +539,11 @@
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
@@ -536,7 +576,7 @@
                         <group>
                             <field name="is_in_physical_inventory"
                                    attrs="{'readonly':[('asset_with_category','=',True)]}"/>
-                            <field name="for_view"/>
+                            <field name="asset_one2many_view"/>
                         </group>
                     </group>
                     <notebook colspan="4">
@@ -545,7 +585,7 @@
                         </page>
                         <page name="book" string="Book">
                             <field name="category_books_id" widget="One2many_list"
-                                   context="{'form_view_ref':'asset_management.category_books_form_view','for_view':for_view}">
+                                   context="{'form_view_ref':'asset_management.category_books_form_view','asset_one2many_view':asset_one2many_view}">
                                 <tree string="book num">
                                     <field name="book_id"/>
                                     <field name="asset_cost_account"/>
@@ -558,6 +598,11 @@
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
@@ -620,6 +665,11 @@
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
@@ -697,6 +747,11 @@
                         </group>
                     </group>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
@@ -712,72 +767,61 @@
                         <lable for="name" class="oe_edit_only"/>
                         <h1>
                             <field name="name" placeholder="Calendar's Name"/>
+                            <field name="calender_one2many_view"/>
                         </h1>
                     </div>
                     <notebook>
                         <page string="Calendar Lines">
-                            <field name="calendar_lines_id" widget="One2many_list" mode="tree,form">
+                            <field name="calendar_lines_id" widget="One2many_list" mode="tree,form"
+                                   context="{'form_view_ref':asset_management.calendar_line_form_view , 'calender_one2many_view':calender_one2many_view}">
                                 <tree string="Calendar Lines" editable="bottom">
                                     <field name="name"/>
                                     <field name="start_date"/>
                                     <field name="end_date"/>
                                 </tree>
-                                <form>
-                                    <sheet>
-                                        <div class="oe_left oe_title">
-                                            <lable for="name" class="oe_edit_only"/>
-                                            <h1>
-                                                <field name="name" placeholder="Calendar's Name"/>
-                                            </h1>
-                                        </div>
-                                        <group>
-                                            <group>
-                                                <field name="start_date"/>
-                                            </group>
-                                            <group>
-                                                <field name="end_date"/>
-                                            </group>
-                                        </group>
-                                    </sheet>
-                                </form>
                             </field>
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
-    <!---->
-    <!--&lt;!&ndash;calender line form view&ndash;&gt;-->
-    <!--<record id="calendar_line_form_view" model="ir.ui.view">-->
-    <!--<field name="name">Calendar line Form</field>-->
-    <!--<field name="model">asset_management.calendar_line</field>-->
-    <!--<field name="arch" type="xml">-->
-    <!--<form name="calendar line form ">-->
-    <!--<sheet>-->
-    <!--<div class="oe_left oe_title">-->
-    <!--<lable for="name" class="oe_edit_only"/>-->
-    <!--<h1>-->
-    <!--<field name="name" placeholder="Calendar's Name"/>-->
-    <!--</h1>-->
-    <!--</div>-->
-    <!--<group>-->
-    <!--<group>-->
-    <!--<field name="start_date"/>-->
-    <!--</group>-->
-    <!--<group>-->
-    <!--<field name="end_date"/>-->
-    <!--</group>-->
-    <!--</group>-->
-    <!--</sheet>-->
-    <!--&lt;!&ndash;<div class="oe_chatter">&ndash;&gt;-->
-    <!--&lt;!&ndash;<field name="message_follower_ids" widget="mail_followers"/>&ndash;&gt;-->
-    <!--&lt;!&ndash;<field name="activity_ids" widget="mail_activity"/>&ndash;&gt;-->
-    <!--&lt;!&ndash;<field name="message_ids" widget="mail_thread"/>&ndash;&gt;-->
-    <!--&lt;!&ndash;</div>&ndash;&gt;-->
-    <!--</form>-->
-    <!--</field>-->
-    <!--</record>-->
+
+    <!--calender line form view-->
+    <record id="calendar_line_form_view" model="ir.ui.view">
+        <field name="name">Calendar line Form</field>
+        <field name="model">asset_management.calendar_line</field>
+        <field name="arch" type="xml">
+            <form name="calendar line form ">
+                <sheet>
+                    <div class="oe_left oe_title">
+                        <lable for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Calendar's Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="start_date"/>
+                        </group>
+                        <group>
+                            <field name="end_date"/>
+                        </group>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
 
     <!--depreciation run process form-->
     <record id="dep_run_process_form_view" model="ir.ui.view">
@@ -799,33 +843,26 @@
                             <field name="process_period_id"/>
                             <field name="book_id"/>
                             <field name="reinstall_flag" invisible="1"/>
+                            <field name="dep_on2many_view" />
                         </group>
                     </group>
                     <notebook>
                         <page string="Depreciation Run Process lines">
                             <field name="dep_run_process_lines" widget="One2many_list" readonly="1"
-                                   mode="tree,form">
+                                   mode="tree,form" context="{'form_view_ref':'asset_management.dep_run_process_line_form_view','dep_on2many_view':dep_on2many_view}">
                                 <tree string="depreciation line" edit="false" create="false" delete="false">
                                     <field name="sequence"/>
                                     <field name="depreciation_id"/>
                                 </tree>
-                                <form>
-                                    <sheet>
-                                        <group>
-                                            <group>
-                                                <field name="sequence"/>
-                                            </group>
-                                            <group>
-                                                <field name="dep_run_process_id"/>
-                                                <field name="depreciation_id"/>
-                                            </group>
-                                        </group>
-                                    </sheet>
-                                </form>
                             </field>
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
