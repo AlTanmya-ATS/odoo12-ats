@@ -207,7 +207,7 @@
             <field name="context" eval="{'search_default_my_book_assets': 1}"/>
             <field name="view_ids" eval="[(5, 0, 0),
                     (0, 0, {'view_mode': 'tree', 'view_id': ref('book_asset_tree_view')}),
-                    (0, 0, {'view_mode': 'form', 'view_id': ref('book_asset_form_view')})]"/>
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('book_assets_form_view')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first book assets
                 </p>
@@ -483,7 +483,7 @@
             <field name="view_mode">tree,form</field>
             <field name="view_ids" eval="[(5, 0, 0),
                     (0, 0, {'view_mode': 'tree', 'view_id': ref('asset_management_retirement_type_tree')}),
-                    (0, 0, {'view_mode': 'form', 'view_id': ref('retirement_type_form_view')})]"/>
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('asset_management_retirement_type_view_form')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">
                     Create the first Retirement Type

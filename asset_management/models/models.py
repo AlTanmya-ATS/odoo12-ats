@@ -7,6 +7,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
 from odoo.tools import float_compare, float_is_zero
+from lxml import etree
 
 
 class Asset(models.Model):
@@ -43,7 +44,7 @@ class Asset(models.Model):
         ('expense', 'Expense'),
         ('capitalize', 'Capitalize')
     ], required=True, track_visibility='onchange')
-    asset_one2many_view = fields.Boolean(default = True)
+    asset_one2many_view = fields.Boolean(default = True,readonly=True)
 
 
     #     @api.onchange('item_id')
@@ -188,7 +189,7 @@ class Category(models.Model):
                                            default='linear', track_visibility='onchange')
     asset_with_category = fields.Boolean()
     active = fields.Boolean(default=True, track_visibility='onchange')
-    asset_one2many_view = fields.Boolean(default = True)
+    asset_one2many_view = fields.Boolean(default = True , readonly =True)
     _sql_constraints = [
         ('category_name', 'UNIQUE(name)', 'Category name already exist..!')
     ]
@@ -363,13 +364,13 @@ class BookAssets(models.Model):
     current_cost_from_retir = fields.Boolean()
     transaction_id = fields.One2many('asset_management.transaction', inverse_name="book_assets_id", on_delete="cascade")
     assign_change_flag = fields.Boolean()
-    book_one2many_view = fields.Boolean(default=True)
+    book_one2many_view = fields.Boolean(default=True , readonly=True)
 
     @api.model
     def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
         res = super(BookAssets, self).fields_view_get(
             view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
-        if self._context.get('asset_one2many_form'):
+        if self._context.get('asset_one2many_view'):
             doc = etree.XML(res['arch'])
             for node in doc.xpath("//field[@name='message_follower_ids']"):
                     node.set('widget', "")
@@ -1419,7 +1420,7 @@ class Depreciation(models.Model):
     def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
         res = super(Depreciation, self).fields_view_get(
             view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
-        if self._context.get('asset_one2many_form') or self._context.get('book_one2many_form'):
+        if self._context.get('asset_one2many_view') or self._context.get('book_one2many_view'):
             doc = etree.XML(res['arch'])
             for node in doc.xpath("//field[@name='message_follower_ids']"):
                     node.set('widget', "")
@@ -1866,7 +1867,7 @@ class Transaction(models.Model):
     def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
         res = super(Transaction, self).fields_view_get(
             view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
-        if self._context.get('asset_one2many_form') or self._context.get('book_one2many_field'):
+        if self._context.get('asset_one2many_view') or self._context.get('book_one2many_view'):
             doc = etree.XML(res['arch'])
             for node in doc.xpath("//field[@name='message_follower_ids']"):
                     node.set('widget', "")
@@ -2388,7 +2389,7 @@ class Calendar(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     name = fields.Char(required=True, track_visibility='always')
     calendar_lines_id = fields.One2many('asset_management.calendar_line', 'calendar_id', on_delete='cascade')
-    calender_one2many_view = fields.Boolean(default=True)
+    calender_one2many_view = fields.Boolean(default=True , readonly =True)
 
     @api.model
     def create(self, values):

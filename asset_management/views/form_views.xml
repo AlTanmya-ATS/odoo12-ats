@@ -767,13 +767,13 @@
                         <lable for="name" class="oe_edit_only"/>
                         <h1>
                             <field name="name" placeholder="Calendar's Name"/>
-                            <field name="calender_one2many_view"/>
                         </h1>
+                        <field name="calender_one2many_view"/>
                     </div>
                     <notebook>
                         <page string="Calendar Lines">
                             <field name="calendar_lines_id" widget="One2many_list" mode="tree,form"
-                                   context="{'form_view_ref':asset_management.calendar_line_form_view , 'calender_one2many_view':calender_one2many_view}">
+                                   context="{'form_view_ref':'asset_management.calendar_line_form_view' , 'calender_one2many_view':calender_one2many_view}">
                                 <tree string="Calendar Lines" editable="bottom">
                                     <field name="name"/>
                                     <field name="start_date"/>
