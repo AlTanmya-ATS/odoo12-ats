@@ -168,6 +168,7 @@
         <field name="inherit_id" ref="asset_management_retirement_type_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
+
                 <div class="oe_chatter">
                     <field name="message_follower_ids" widget="mail_followers"/>
                     <field name="activity_ids" widget="mail_activity"/>

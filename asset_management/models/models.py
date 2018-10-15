@@ -44,6 +44,8 @@ class Asset(models.Model):
         ('capitalize', 'Capitalize')
     ], required=True, track_visibility='onchange')
 
+
+
     #     @api.onchange('item_id')
     #     def _test_tracking_in_item(self):
     #         if self.item_id:
@@ -186,6 +188,7 @@ class Category(models.Model):
                                            default='linear', track_visibility='onchange')
     asset_with_category = fields.Boolean()
     active = fields.Boolean(default=True, track_visibility='onchange')
+    for_view = fields.Boolean(default = True)
     _sql_constraints = [
         ('category_name', 'UNIQUE(name)', 'Category name already exist..!')
     ]
@@ -1713,6 +1716,19 @@ class CategoryBooks(models.Model):
                                                                    track_visibility='onchange')
     accumulated_depreciation_analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic tags',
                                                                  track_visibility='onchange')
+
+    @api.model
+    def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
+        res = super(CategoryBooks, self).fields_view_get(
+            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+        if self._context.get('for_view'):
+            doc = etree.XML(res['arch'])
+            for node in doc.xpath("//field[@name='message_follower_ids']"):
+                if self._context.get('for_view'):
+                    node.set('widget', "mail_followers")
+            res['arch'] = etree.tostring(doc, encoding='unicode')
+
+        return res
 
     @api.model
     def create(self, values):

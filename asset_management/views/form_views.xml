@@ -508,7 +508,7 @@
         </field>
     </record>
 
-    <!--category form viewe-->
+    <!--category form view-->
     <record model="ir.ui.view" id="category_form_view">
         <field name="name">category.form</field>
         <field name="model">asset_management.category</field>
@@ -536,6 +536,7 @@
                         <group>
                             <field name="is_in_physical_inventory"
                                    attrs="{'readonly':[('asset_with_category','=',True)]}"/>
+                            <field name="for_view"/>
                         </group>
                     </group>
                     <notebook colspan="4">
@@ -544,7 +545,7 @@
                         </page>
                         <page name="book" string="Book">
                             <field name="category_books_id" widget="One2many_list"
-                                   context="{'form_view_ref':'asset_management.category_books_form_view'}">
+                                   context="{'form_view_ref':'asset_management.category_books_form_view','for_view':for_view}">
                                 <tree string="book num">
                                     <field name="book_id"/>
                                     <field name="asset_cost_account"/>
