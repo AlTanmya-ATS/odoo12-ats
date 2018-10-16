@@ -241,7 +241,7 @@
                         </group>
                         <group>
                             <field name="book_assets_id" invisible="1"/>
-                            <field name="history_flag"/>
+                            <field name="history_flag" invisible="1"/>
                             <field name="percentage"/>
                             <field name="responsible_id"/>
                             <field name="location_id"/>
@@ -300,6 +300,16 @@
         </field>
     </record>
 
+    <record model="ir.actions.act_window" id="set_asset_to_retire">
+        <field name="name">set asset to retire</field>
+        <field name="res_model">asset_management.retirement</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="retirement_form_view"/>
+        <field name="target">current</field>
+        <field name="context">{'default_asset_id':active_id}</field>
+    </record>
+
+
     <!--book asset form  view-->
     <record model="ir.ui.view" id="book_assets_form_view">
         <field name="name">book_assets form</field>
@@ -318,6 +328,8 @@
                     <button name="compute_depreciation_board" string="Compute Depreciation" type="object"
                             class="oe_highlight"
                             attrs="{'invisible':['|','|',('depreciation_computation','=',False),('state','!=','draft'),('id','=',False)]}"/>
+                    <button string="Set to Retire" type="action" name="%(set_asset_to_retire)d" class="oe_highlight"
+                            attrs="{'invisible':[('state','=','draft')]}"/>
 
                     <field name="state" widget="statusbar" statusbar_visible="draft,open"/>
                 </header>
@@ -326,6 +338,9 @@
                     <div class="oe_button_box" name="button_box">
                         <button class="oe_stat_button" name="open_entries" type="object" icon="fa-pencil">
                             <field string="Items" name="entry_count" widget="statinfo"/>
+                        </button>
+                        <button class="oe_stat_button" name="open_retired_window" type="object" icon="fa-pencil">
+                            <field string="Retirement" name="retirement_count" widget="statinfo"/>
                         </button>
                     </div>
                     <group>
@@ -374,7 +389,7 @@
                             <field name="source_amount" invisible="1"/>
                             <field name="assign_change_flag" invisible="1"/>
                             <field name="percentage" invisible="1"/>
-                            <field name="book_one2many_view"/>
+                            <field name="book_one2many_view" invisible="1"/>
                         </group>
                     </group>
 
@@ -470,6 +485,7 @@
                             <field name="asset_with_category" invisible="1"/>
                             <field name="category_invisible" invisible="1"/>
                             <field name="currency_id" invisible="1"/>
+                            <field name="asset_with_one2many" invisible="1"/>
                         </group>
                         <group>
                             <field name="in_use_flag"/>
@@ -478,7 +494,7 @@
                             <field name="ownership_type"/>
                             <field name="asset_serial_number"/>
                             <field name="asset_tag_number" widget="many2many_tags"/>
-                            <field name="asset_one2many_view"/>
+
                         </group>
                     </group>
 
@@ -488,8 +504,9 @@
                         </page>
 
                         <page name="book" string="Book">
-                            <field name="book_assets_id" widget="One2many_ist" mode="tree"
-                                   context="{'default_category_id':category_id,'form_view_ref':'asset_management.book_assets_form_view','asset_one2many_view':asset_one2many_view}">
+                            <field name="book_assets_id" widget="One2many_ist" mode='tree,form'
+                                   context="{'default_category_id':category_id,'form_view_ref':'asset_management.book_assets_form_view',
+                           'asset_with_one2many':asset_with_one2many}">
                                 <tree string="Book Num" delete="false">
                                     <field name="book_id"/>
                                     <field name="category_id" invisible="1"/>
@@ -511,8 +528,8 @@
                         </page>
 
                         <page name="depreciation" string="Depreciation">
-                            <field name="depreciation_line_ids" widget="One2many_list" mode="tree" readonly="1"
-                                   context="{'form_view_ref':'asset_management.depreciation_form_view','asset_one2many_view':asset_one2many_view}">
+                            <field name="depreciation_line_ids" widget="One2many_list" mode="tree,form" readonly="1"
+                                   context="{'form_view_ref':'asset_management.depreciation_form_view','asset_with_one2many':asset_with_one2many}">
                                 <tree string="Depreciation" create="false" edit="false" delete="false">
                                     <field name="book_id"/>
                                     <field name="depreciation_date"/>
@@ -527,10 +544,10 @@
                             </field>
                         </page>
 
-                        <page name="Transaction" string="Transactions">
-                            <field name="transaction_id" widget="One2many_list" mode="tree" readonly="1"
-                                   options="{'form_view_ref':'asset_management.transaction_form_view','asset_one2many_view':asset_one2many_view}">
-                                <tree string="Transaction" create="false" edit="false" delete="false">
+                        <page string="Transactions" name="transactions">
+                            <field name="transaction_id" widget="One2many_list" mode="tree,form" readonly="1"
+                                   context="{'form_view_ref':'asset_management.transaction_form_view','asset_with_one2many':asset_with_one2many}">
+                                <tree name="Transaction" create="false" edit="false" delete="false">
                                     <field name="book_id"/>
                                     <field name="trx_type"/>
                                     <field name="trx_date"/>
@@ -576,7 +593,7 @@
                         <group>
                             <field name="is_in_physical_inventory"
                                    attrs="{'readonly':[('asset_with_category','=',True)]}"/>
-                            <field name="asset_one2many_view"/>
+                            <field name="category_one2many_view" invisible="1"/>
                         </group>
                     </group>
                     <notebook colspan="4">
@@ -585,7 +602,7 @@
                         </page>
                         <page name="book" string="Book">
                             <field name="category_books_id" widget="One2many_list"
-                                   context="{'form_view_ref':'asset_management.category_books_form_view','asset_one2many_view':asset_one2many_view}">
+                                   context="{'form_view_ref':'asset_management.category_books_form_view','category_one2many_view':category_one2many_view}">
                                 <tree string="book num">
                                     <field name="book_id"/>
                                     <field name="asset_cost_account"/>
@@ -768,7 +785,7 @@
                         <h1>
                             <field name="name" placeholder="Calendar's Name"/>
                         </h1>
-                        <field name="calender_one2many_view"/>
+                        <field name="calender_one2many_view" invisible="1"/>
                     </div>
                     <notebook>
                         <page string="Calendar Lines">
@@ -843,13 +860,14 @@
                             <field name="process_period_id"/>
                             <field name="book_id"/>
                             <field name="reinstall_flag" invisible="1"/>
-                            <field name="dep_on2many_view" />
+                            <field name="dep_on2many_view" invisible="1"/>
                         </group>
                     </group>
                     <notebook>
                         <page string="Depreciation Run Process lines">
                             <field name="dep_run_process_lines" widget="One2many_list" readonly="1"
-                                   mode="tree,form" context="{'form_view_ref':'asset_management.dep_run_process_line_form_view','dep_on2many_view':dep_on2many_view}">
+                                   mode="tree,form"
+                                   context="{'form_view_ref':'asset_management.dep_run_process_line_form_view','dep_on2many_view':dep_on2many_view}">
                                 <tree string="depreciation line" edit="false" create="false" delete="false">
                                     <field name="sequence"/>
                                     <field name="depreciation_id"/>

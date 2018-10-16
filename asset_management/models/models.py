@@ -29,11 +29,8 @@ class Asset(models.Model):
     depreciation_line_ids = fields.One2many(comodel_name="asset_management.depreciation", inverse_name="asset_id",
                                             string="depreciation", on_delete='cascade')
     asset_serial_number = fields.Char(string='Serial Number', track_visibility='onchange')
-    asset_tag_number = fields.Many2many('asset_management.tag', track_visibility='onchange')
+    asset_tag_number = fields.Many2many('asset_management.tag', relation="asset_tag",column1="asset_id",column2="tag_id",track_visibility='onchange')
     serial_flag = fields.Boolean()
-    #     _sql_constraints=[
-    #         ('asset_serial_number','UNIQUE(asset_tag_number,asset_serial_number)','Serial Number already exists!')
-    #     ]
     asset_with_category = fields.Boolean(related='category_id.asset_with_category')
     currency_id = fields.Many2one('res.currency', string='Currency', required=True, readonly=True,
                                   default=lambda self: self.env.user.company_id.currency_id.id)
@@ -44,8 +41,7 @@ class Asset(models.Model):
         ('expense', 'Expense'),
         ('capitalize', 'Capitalize')
     ], required=True, track_visibility='onchange')
-    asset_one2many_view = fields.Boolean(default = True,readonly=True)
-
+    asset_with_one2many = fields.Boolean(default=True)
 
     #     @api.onchange('item_id')
     #     def _test_tracking_in_item(self):
@@ -55,18 +51,17 @@ class Asset(models.Model):
     #             else:
     #                 self.serial_flag = False
 
-    # @api.constrains('asset_serial_number','asset_tag_number')
-    # def unique_serial_tag_number_on_asset(self):
-    #     for rec in self:
-    #         query = """select id
-    #                     from asset_management.mode
-    #                     where asset_serial_number = %s
-    #                      and asset_tag_number in %s """
-    #         self._cr.execute(query,record.asset_serial_number, (tuple(record.asset_tag_number.ids)))
-    #         for id in self._cr.fetchall():
-    #             if id :
-    #                 raise ValidationError(_("not unique"))
-
+#uniqe asset on based of serial and tag number
+    @api.constrains('asset_serial_number', 'asset_tag_number')
+    def _unique_serial_tag_number_on_asset(self):
+        for rec in self:
+            x = self.env['asset_management.asset'].search([('asset_serial_number', '=',rec.asset_serial_number),('id','!=',self.id)])
+            if x:
+                for xx in x:
+                    p_id = [p.id for p in xx.asset_tag_number]
+                    a_id = [a.id for a in self.asset_tag_number]
+                    if set(a_id) == frozenset(p_id):
+                        raise ValidationError(_('Asset Serial and Tag Number must be UNIQUE'))
 
     @api.onchange('category_id')
     def _get_default_values_for_asset(self):
@@ -176,6 +171,7 @@ class Asset(models.Model):
         super(Asset, self).unlink()
 
 
+
 class Category(models.Model):
     _name = 'asset_management.category'
     _inherit = ['mail.thread', 'mail.activity.mixin']
@@ -189,7 +185,7 @@ class Category(models.Model):
                                            default='linear', track_visibility='onchange')
     asset_with_category = fields.Boolean()
     active = fields.Boolean(default=True, track_visibility='onchange')
-    asset_one2many_view = fields.Boolean(default = True , readonly =True)
+    category_one2many_view = fields.Boolean(default=True, readonly=True)
     _sql_constraints = [
         ('category_name', 'UNIQUE(name)', 'Category name already exist..!')
     ]
@@ -364,20 +360,44 @@ class BookAssets(models.Model):
     current_cost_from_retir = fields.Boolean()
     transaction_id = fields.One2many('asset_management.transaction', inverse_name="book_assets_id", on_delete="cascade")
     assign_change_flag = fields.Boolean()
-    book_one2many_view = fields.Boolean(default=True , readonly=True)
+    book_one2many_view = fields.Boolean(default=True, readonly=True)
+    retirement_count = fields.Integer(compute='_asset_retirement_count')
+
+    @api.multi
+    @api.depends('asset_id', 'book_id')
+    def _asset_retirement_count(self):
+        for asset in self:
+            res = self.env['asset_management.retirement'].search_count(
+                [('asset_id', '=', self.asset_id.id), ('book_id', '=', self.book_id.id)])
+            asset.retirement_count = res or 0
+
+    @api.multi
+    def open_retired_window(self):
+        retirement_ids = self.env['asset_management.retirement'].browse(
+            [('asset_id', '=', self.asset_id.id), ('book_id', '=', self.book_id.id)])
+        return {
+        'name': _('Retirement'),
+        'type': 'ir.actions.act_window',
+        'view_type': 'form',
+        'view_mode': 'form',
+        'res_model': 'asset_management.retirement',
+        'target': 'current',
+        'res_id':[('id', 'in', retirement_ids)],
+
+    }
 
     @api.model
     def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
         res = super(BookAssets, self).fields_view_get(
             view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
-        if self._context.get('asset_one2many_view'):
+        if self._context.get('asset_with_one2many'):
             doc = etree.XML(res['arch'])
             for node in doc.xpath("//field[@name='message_follower_ids']"):
-                    node.set('widget', "")
+                node.set('widget', "")
             for node in doc.xpath("//field[@name='activity_ids']"):
-                    node.set('widget', "")
+                node.set('widget', "")
             for node in doc.xpath("//field[@name='message_ids']"):
-                    node.set('widget', "")
+                node.set('widget', "")
             res['arch'] = etree.tostring(doc, encoding='unicode')
         return res
 
@@ -626,6 +646,7 @@ class BookAssets(models.Model):
                             'cost': self.current_cost,
                             'trx_date': datetime.today(),
                             'trx_details': 'Responsible : ' + str(responsable) + '\nLocation : ' + str(location)
+
                             if responsable else 'Location : ' + str(location)
                         })
 
@@ -651,7 +672,6 @@ class BookAssets(models.Model):
                 }
                 new_assignment.append((0, False, vals))
 
-
         elif self.prorate_date < self.book_id.calendar_line_id.start_date:
             new_assign = self.assignment_id.filtered(lambda x: not x.history_flag and not x.date_to)
             new_assignment = [(2, line_id.id, False) for line_id in new_assign]
@@ -667,9 +687,11 @@ class BookAssets(models.Model):
                     'depreciation_expense_analytic_account_id': assign.depreciation_expense_analytic_account_id.id,
                     'depreciation_expense_analytic_tag_ids': tag_ids
                 }
-                depreciation_line = self.depreciation_line_ids.sorted(key=lambda l: l.depreciation_date)
-                for dep in depreciation_line:
-                    if dep.depreciation_date >= self.prorate_date and dep.move_check:
+                depreciation_line = self.depreciation_line_ids.filtered(lambda x:x.move_check).sorted(key=lambda l: l.depreciation_date)[-1]
+                next_dep_date = self.depreciation_line_ids.filtered(lambda x:x.sequence == depreciation_line.sequence+1)
+                # for dep in depreciation_line:
+                start_period_date = self.book_id.calendar_line_id.start_date
+                if self.prorate_date <= depreciation_line.depreciation_date and not next_dep_date.depreciation_date < start_period_date:
                         if not assign.date_from:
                             values.update({
                                 'date_from': self.book_id.calendar_line_id.start_date,
@@ -677,13 +699,11 @@ class BookAssets(models.Model):
 
                             })
                         else:
-
-                            start_period_date = self.book_id.calendar_line_id.start_date
                             if assign.date_from < start_period_date:
                                 # old_assign = self.env['asset_management.assignment'].search([('book_assets_id','=',self.id),('id','=',assign.id)])
-                                start_date = datetime.strptime(start_period_date, DF).date()
+                                # start_date = datetime.strptime(start_period_date, DF).date()
                                 values.update({
-                                    'date_from': self.book_id.calendar_line_id.start_date,
+                                    'date_from': start_period_date,
                                     'percentage': assign.percentage,
                                 })
                                 for ss in old:
@@ -697,22 +717,21 @@ class BookAssets(models.Model):
                                             'depreciation_expense_analytic_account_id': ss.get(
                                                 'depreciation_expense_analytic_account_id'),
                                             'depreciation_expense_analytic_tag_ids': ss.get('tag_ids'),
-                                            'date_to': start_date + relativedelta(days=-1),
+                                            'date_to': start_period_date + relativedelta(days=-1),
                                             'history_flag': True,
                                             'date_from': ss.get('date_from'),
                                             'percentage': ss.get('percentage')
                                         }
                                         new_assignment.append((0, False, values2))
-
                             elif assign.date_from >= start_period_date:
                                 values.update({
                                     'date_from': assign.date_from,
                                     'percentage': assign.percentage,
                                 })
 
-                        break
+                        # break
 
-                    elif dep.depreciation_date >= self.prorate_date and not dep.move_check:
+                elif depreciation_line.depreciation_date >= self.prorate_date and next_dep_date.depreciation_date < start_period_date :
                         if not assign.date_from:
                             values.update({
                                 'date_from': self.prorate_date,
@@ -723,13 +742,10 @@ class BookAssets(models.Model):
                                 'date_from': assign.date_from,
                                 'percentage': assign.percentage,
                             })
-                        break
+                        # break
 
                 new_assignment.append((0, False, values))
         assign_change_flag = False
-        # self.write({'assignment_id': new_assignment,
-        #           'assign_change_flag':False})
-
         return new_assignment, assign_change_flag
 
     @api.one
@@ -1179,7 +1195,6 @@ class Assignment(models.Model):
     depreciation_expense_analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic tags',
                                                              track_visibility='onchange')
 
-
     @api.model
     def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
         res = super(Assignment, self).fields_view_get(
@@ -1420,17 +1435,16 @@ class Depreciation(models.Model):
     def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
         res = super(Depreciation, self).fields_view_get(
             view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
-        if self._context.get('asset_one2many_view') or self._context.get('book_one2many_view'):
+        if self._context.get('asset_with_one2many') or self._context.get('book_one2many_view'):
             doc = etree.XML(res['arch'])
             for node in doc.xpath("//field[@name='message_follower_ids']"):
-                    node.set('widget', "")
+                node.set('widget', "")
             for node in doc.xpath("//field[@name='activity_ids']"):
-                    node.set('widget', "")
+                node.set('widget', "")
             for node in doc.xpath("//field[@name='message_ids']"):
-                    node.set('widget', "")
+                node.set('widget', "")
             res['arch'] = etree.tostring(doc, encoding='unicode')
         return res
-
 
     @api.multi
     @api.depends('move_id')
@@ -1451,6 +1465,8 @@ class Depreciation(models.Model):
         created_moves = self.env['account.move']
         prec = self.env['decimal.precision'].precision_get('Account')
         # current_currency = self.env['res.company'].search([('id','=',1)])[0].currency_id
+        if self.depreciation_date > self.book_id.calendar_line_id.end_date:
+            raise ValidationError(_('You can not create Entries for Line with Future Date'))
         journal_id = self.env['asset_management.category_books'].search(
             [('book_id', '=', self.book_id.id), ('category_id', '=', self.book_assets_id.category_id.id)]).journal_id
         tag_ids = []
@@ -1784,7 +1800,7 @@ class CategoryBooks(models.Model):
     def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
         res = super(CategoryBooks, self).fields_view_get(
             view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
-        if self._context.get('asset_one2many_view'):
+        if self._context.get('category_one2many_view'):
             doc = etree.XML(res['arch'])
             for node in doc.xpath("//field[@name='message_follower_ids']"):
                 node.set('widget', "")
@@ -1867,14 +1883,14 @@ class Transaction(models.Model):
     def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
         res = super(Transaction, self).fields_view_get(
             view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
-        if self._context.get('asset_one2many_view') or self._context.get('book_one2many_view'):
+        if self._context.get('asset_with_one2many') or self._context.get('book_one2many_view'):
             doc = etree.XML(res['arch'])
             for node in doc.xpath("//field[@name='message_follower_ids']"):
-                    node.set('widget', "")
+                node.set('widget', "")
             for node in doc.xpath("//field[@name='activity_ids']"):
-                    node.set('widget', "")
+                node.set('widget', "")
             for node in doc.xpath("//field[@name='message_ids']"):
-                    node.set('widget', "")
+                node.set('widget', "")
             res['arch'] = etree.tostring(doc, encoding='unicode')
         return res
 
@@ -2172,7 +2188,7 @@ class Transaction(models.Model):
 
                 if retirement.cost_of_removal:
                     cost_of_removal_account = retirement.retirement_type_id.cost_of_removal_account.id
-                    for tag in rretirement.retirement_type_id.cost_of_removal_analytic_tag_ids:
+                    for tag in retirement.retirement_type_id.cost_of_removal_analytic_tag_ids:
                         tag_ids.append((4, tag.id, 0))
                     move_line_4 = {
                         'name': asset_name,
@@ -2389,7 +2405,7 @@ class Calendar(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     name = fields.Char(required=True, track_visibility='always')
     calendar_lines_id = fields.One2many('asset_management.calendar_line', 'calendar_id', on_delete='cascade')
-    calender_one2many_view = fields.Boolean(default=True , readonly =True)
+    calender_one2many_view = fields.Boolean(default=True, readonly=True)
 
     @api.model
     def create(self, values):
