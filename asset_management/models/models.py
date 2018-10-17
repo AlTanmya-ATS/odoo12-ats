@@ -55,13 +55,14 @@ class Asset(models.Model):
     @api.constrains('asset_serial_number', 'asset_tag_number')
     def _unique_serial_tag_number_on_asset(self):
         for rec in self:
-            x = self.env['asset_management.asset'].search([('asset_serial_number', '=',rec.asset_serial_number),('id','!=',self.id)])
-            if x:
-                for xx in x:
-                    p_id = [p.id for p in xx.asset_tag_number]
-                    a_id = [a.id for a in self.asset_tag_number]
-                    if set(a_id) == frozenset(p_id):
-                        raise ValidationError(_('Asset Serial and Tag Number must be UNIQUE'))
+            if rec.asset_serial_number or rec.asset_tag_number:
+                x = self.env['asset_management.asset'].search([('asset_serial_number', '=',rec.asset_serial_number),('id','!=',self.id)])
+                if x:
+                    for xx in x:
+                        p_id = [p.id for p in xx.asset_tag_number]
+                        a_id = [a.id for a in self.asset_tag_number]
+                        if set(a_id) == frozenset(p_id):
+                            raise ValidationError(_('Asset Serial and Tag Number must be UNIQUE'))
 
     @api.onchange('category_id')
     def _get_default_values_for_asset(self):
@@ -375,14 +376,15 @@ class BookAssets(models.Model):
     def open_retired_window(self):
         retirement_ids = self.env['asset_management.retirement'].browse(
             [('asset_id', '=', self.asset_id.id), ('book_id', '=', self.book_id.id)])
+
         return {
-        'name': _('Retirement'),
-        'type': 'ir.actions.act_window',
-        'view_type': 'form',
-        'view_mode': 'form',
-        'res_model': 'asset_management.retirement',
-        'target': 'current',
-        'res_id':[('id', 'in', retirement_ids)],
+            'name': _('Retirement'),
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'asset_management.retirement',
+            'view_id': false,
+            'domain': [('id', 'in', retirement_ids)],
 
     }
 
@@ -418,7 +420,7 @@ class BookAssets(models.Model):
 
     @api.onchange('current_cost_from_retir')
     def _set_to_close(self):
-        if self.current_cost_from_retir and self.current_cost_from_retir == True:
+        if self.current_cost_from_retir :
             if self.current_cost == 0:
                 self.state = 'close'
 
@@ -1719,6 +1721,9 @@ class Retirement(models.Model):
                 'retirement_id': res.id,
                 'trx_details': 'A full retirement has occur for asset (' + str(res.asset_id.name) + ') on book (' + str(
                     res.book_id.name) + ')'
+            })
+            self.book_assets_id.write({
+                'state':'close'
             })
         else:
             res.env['asset_management.transaction'].create({
