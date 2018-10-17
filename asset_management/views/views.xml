@@ -186,7 +186,7 @@
 
         <!--book asset search view-->
         <record model="ir.ui.view" id="book_asset_search_view">
-            <field name="name">assignment.search</field>
+            <field name="name">book asset.search</field>
             <field name="model">asset_management.book_assets</field>
             <field name="arch" type="xml">
                 <search>
@@ -534,7 +534,7 @@
             <field name="name">dep run process tree</field>
             <field name="model">asset_management.deprunprocess</field>
             <field name="arch" type="xml">
-                <tree string="Depreciation Run Process tree">
+                <tree string="Depreciation Run Process tree" edit="false" create="false">
                     <field name="name"/>
                     <field name="process_date"/>
                     <field name="process_period_id"/>

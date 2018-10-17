@@ -224,30 +224,33 @@
         <field name="name">assignment.form</field>
         <field name="model">asset_management.assignment</field>
         <field name="arch" type="xml">
-            <form string="Assignment Form" create="false">
+            <form string="Assignment Form" create="false" edite="false">
                 <sheet>
                     <group>
                         <group>
                             <field name="asset_id"/>
                             <field name="book_id"/>
-                            <field name="depreciation_expense_account"/>
+                            <field name="depreciation_expense_account"
+                                   attrs="{'readonly':[('history_flag','=',True)]}"/>
                             <field name="depreciation_expense_analytic_account_id"
                                    groups="analytic.group_analytic_accounting"
-                                   placeholder="depreciation expense analytic account"/>
+                                   placeholder="depreciation expense analytic account"
+                                   attrs="{'history_flag':[('history_flag','=',True)]}"/>
                             <field name="depreciation_expense_analytic_tag_ids"
                                    groups="analytic.group_analytic_accounting" widget="many2many_tags"
-                                   placeholder="depreciation expense analytic tag"/>
+                                   placeholder="depreciation expense analytic tag"
+                                   attrs="{'readonly':[('history_flag','=',True)]}"/>
 
                         </group>
                         <group>
                             <field name="book_assets_id" invisible="1"/>
                             <field name="history_flag" invisible="1"/>
-                            <field name="percentage"/>
-                            <field name="responsible_id"/>
-                            <field name="location_id"/>
-                            <field name="date_from"/>
-                            <field name="date_to"/>
-                            <field name="comments"/>
+                            <field name="percentage" attrs="{'readonly':[('history_flag','=',True)]}"/>
+                            <field name="responsible_id" attrs="{'readonly':[('history_flag','=',True)]}"/>
+                            <field name="location_id" attrs="{'readonly':[('history_flag','=',True)]}"/>
+                            <field name="date_from" attrs="{'readonly':[('history_flag','=',True)]}"/>
+                            <field name="date_to" attrs="{'readonly':[('history_flag','=',True)]}"/>
+                            <field name="comments" attrs="{'readonly':[('history_flag','=',True)]}"/>
                         </group>
                     </group>
                 </sheet>
@@ -404,7 +407,7 @@
                                     <field name="date_from"/>
                                     <field name="percentage"/>
                                     <field name="date_to"/>
-                                    <field name="history_flag"/>
+                                    <field name="history_flag" invisible="1"/>
                                 </tree>
                             </field>
                         </page>
@@ -844,11 +847,11 @@
     <record id="dep_run_process_form_view" model="ir.ui.view">
         <field name="name">dep run process form</field>
         <field name="model">asset_management.deprunprocess</field>
-        <field name="arch" type="xml">
+        <field name="arch" type="xml" create="false" edit="false">
             <form string="Depreciation Run Process Form">
                 <header>
-                    <button name="reinstall" string="Reinstall" type="object" class="oe_highlight" attrs="{'invisible':['|',('id','=',False),
-                                                            ('reinstall_flag','=',True)]}"/>
+                    <button name="reinstall" string="Reinstall" type="object" class="oe_highlight" attrs="{'invisible':['|','|',('id','=',False),
+                                                            ('reinstall_flag','=',True),('end_of_period','=',True)]}"/>
                 </header>
                 <sheet>
                     <group>
@@ -859,8 +862,9 @@
                         <group>
                             <field name="process_period_id"/>
                             <field name="book_id"/>
-                            <field name="reinstall_flag" invisible="1"/>
+                            <field name="reinstall_flag" invisible="1" force_save="1"/>
                             <field name="dep_on2many_view" invisible="1"/>
+                            <field name="end_of_period" invisible="1"/>
                         </group>
                     </group>
                     <notebook>

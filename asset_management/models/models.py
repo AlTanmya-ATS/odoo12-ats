@@ -121,6 +121,7 @@ class Asset(models.Model):
                 [('asset_id', '=', entries.asset_id.id), ('book_id', '=', book_id),
                  ('trx_date', '<=', period_id.end_date), ('move_posted_check', '=', False)])
             sequence = 0
+            #create moves for depreciation lines
             for deprecation in dep_line:
                 if not deprecation.move_check:
                     deprecation.create_move()
@@ -134,7 +135,7 @@ class Asset(models.Model):
                     new_moved_lines += deprecation
                 else:
                     old_moved_lines += deprecation
-
+            #create moves for transaction lines
             for trx in trx_lines:
                 if not trx.move_check and not trx.asset_id.asset_type == 'expense':
                     if trx.trx_type == 'full_retirement' or trx.trx_type == 'partial_retirement':
@@ -151,20 +152,20 @@ class Asset(models.Model):
             new_moved_lines += old_moved_lines
             return new_moved_lines
 
-    @api.multi
-    def post_lines_and_close_asset(self, book_id):
-        # we re-evaluate the assets to determine whether we can close them
-        for line in self:
-            # line.log_message_when_posted()
-            # asset = line.asset_id
-            # book=line.book_id
-            book_asset = line.env['asset_management.book_assets'].search(
-                [('asset_id', '=', line.id), ('book_id', '=', book_id)])
-            residual_value = book_asset[0].residual_value
-            current_currency = self.env['res.company'].search([('id', '=', 1)])[0].currency_id
-            if current_currency.is_zero(residual_value):
-                # asset.message_post(body=_("Document closed."))
-                book_asset.write({'state': 'close'})
+    # @api.multi
+    # def post_lines_and_close_asset(self, book_id):
+    #     # we re-evaluate the assets to determine whether we can close them
+    #     for line in self:
+    #         # line.log_message_when_posted()
+    #         # asset = line.asset_id
+    #         # book=line.book_id
+    #         book_asset = line.env['asset_management.book_assets'].search(
+    #             [('asset_id', '=', line.id), ('book_id', '=', book_id)])
+    #         residual_value = book_asset[0].residual_value
+    #         current_currency = self.env['res.company'].search([('id', '=', 1)])[0].currency_id
+    #         if current_currency.is_zero(residual_value):
+    #             # asset.message_post(body=_("Document closed."))
+    #             book_asset.write({'state': 'close'})
 
     @api.multi
     def unlink(self):
@@ -383,7 +384,7 @@ class BookAssets(models.Model):
             'view_type': 'form',
             'view_mode': 'tree,form',
             'res_model': 'asset_management.retirement',
-            'view_id': false,
+            'view_id': F,
             'domain': [('id', 'in', retirement_ids)],
 
     }
@@ -418,11 +419,11 @@ class BookAssets(models.Model):
             if asset.asset_id.asset_type == 'capitalize':
                 asset.depreciation_computation = True
 
-    @api.onchange('current_cost_from_retir')
-    def _set_to_close(self):
-        if self.current_cost_from_retir :
-            if self.current_cost == 0:
-                self.state = 'close'
+    # @api.onchange('current_cost_from_retir')
+    # def _set_to_close(self):
+    #     if self.current_cost_from_retir :
+    #         if self.current_cost == 0:
+    #             self.state = 'close'
 
     # @api.onchange('date_in_service')
     # def _onchange_date_in_service(self):
@@ -544,7 +545,6 @@ class BookAssets(models.Model):
     def write(self, values):
         old_gross_value = self.current_cost
         old_category = self.category_id
-
         old_assign = self.assignment_id.filtered(lambda x: not x.history_flag and not x.date_to and x.date_from)
         old = []
         for x in old_assign:
@@ -567,8 +567,11 @@ class BookAssets(models.Model):
                 old.append(values2)
 
         super(BookAssets, self).write(values)
-        if not self.source_line_ids:
-            raise ValidationError(_('Source line must be added to book'))
+        # if not self.source_line_ids:
+        #     raise ValidationError(_('Source line must be added to book'))
+
+        # if 'assignment_id' in values :
+        #     self.prorate_date
 
         new_assignment, assign_change_flag = self._create_assignment(old)
 
@@ -587,7 +590,7 @@ class BookAssets(models.Model):
                          ('category_id', '=', self.category_id.id)]).depreciation_expense_account
                     for assignment in self.assignment_id:
                         assignment.depreciation_expense_account = new_depreciation_expense_account
-                        self.compute_depreciation_board()
+                    self.compute_depreciation_board()
             if 'current_cost' in values:
                 self.compute_depreciation_board()
 
@@ -653,7 +656,6 @@ class BookAssets(models.Model):
                         })
 
     def _create_assignment(self, old):
-        self.ensure_one()
         new_assignment = []
         tag_ids = []
         if self.prorate_date >= self.book_id.calendar_line_id.start_date:
@@ -1212,14 +1214,15 @@ class Assignment(models.Model):
             res['arch'] = etree.tostring(doc, encoding='unicode')
         return res
 
-    @api.onchange('book_id')
+    @api.onchange('book_id','responsible_id')
     def _dep_expense_domain(self):
         for record in self:
-            return {'domain': {'depreciation_expense_account': [('company_id', '=', record.book_id.company_id.id)],
-                               'depreciation_expense_analytic_account_id': [
-                                   ('company_id', '=', record.book_id.company_id.id)]
+            if record.responsible_id or record.book_id:
+                return {'domain': {'depreciation_expense_account': [('company_id', '=', record.book_id.company_id.id)],
+                                   'depreciation_expense_analytic_account_id': [
+                                       ('company_id', '=', record.book_id.company_id.id)]
 
-                               }}
+                                   }}
 
     @api.constrains('percentage')
     def _check_valid_percentage(self):
@@ -1255,6 +1258,18 @@ class Assignment(models.Model):
         }
         for k, v in value.items():
             setattr(self, k, v)
+
+#prevent editing in asset assignment if the entries for the current period is generated
+    @api.multi
+    def write(self, values):
+        for record in self:
+            depreciation_line = record.book_assets_id.depreciation_line_ids.filtered(lambda x: x.move_check)
+            if depreciation_line:
+                depreciation_line = depreciation_line.sorted(key=lambda l: l.depreciation_date)[-1]
+                calender_period = record.book_assets_id.book_id.calendar_line_id
+                if calender_period.start_date <= depreciation_line.depreciation_date < calender_period.end_date:
+                    raise  ValidationError(_("You can't change assignment for asset with generated entries for its deprecation in this period reinstall the process to be able to"))
+        return super(Assignment, self).write(values)
 
     # creat transaction record when adding a new assignment and location
     # @api.model
@@ -1548,7 +1563,7 @@ class Depreciation(models.Model):
             book_asset = line.env['asset_management.book_assets'].search(
                 [('asset_id', '=', asset.id), ('book_id', '=', book.id)])
             residual_value = book_asset[0].residual_value
-            current_currency = self.env['res.company'].search([('id', '=', 1)])[0].currency_id
+            current_currency = book.currency_id
             if current_currency.is_zero(residual_value):
                 # asset.message_post(body=_("Document closed."))
                 book_asset.write({'state': 'close'})
@@ -1705,6 +1720,13 @@ class Retirement(models.Model):
                 'domain': [('id', 'in', reserved_jl)],
             }
 
+    @api.multi
+    def _close_asset_in_full_retirement(self):
+        residual_value = self.book_assets_id.residual_value
+        current_currency = self.book_id.currency_id
+        if current_currency.is_zero(residual_value):
+            self.book_assets_id.write({'state': 'close'})
+
     @api.model
     def create(self, values):
         values['name'] = self.env['ir.sequence'].next_by_code('asset_management.retirement.Retirement')
@@ -1722,9 +1744,8 @@ class Retirement(models.Model):
                 'trx_details': 'A full retirement has occur for asset (' + str(res.asset_id.name) + ') on book (' + str(
                     res.book_id.name) + ')'
             })
-            self.book_assets_id.write({
-                'state':'close'
-            })
+            res._close_asset_in_full_retirement()
+
         else:
             res.env['asset_management.transaction'].create({
                 'book_assets_id': res.book_assets_id.id,
@@ -2476,13 +2497,14 @@ class DepRunProcess(models.Model):
     _name = "asset_management.deprunprocess"
     _inherit = ['mail.thread', 'mail.activity.mixin']
     name = fields.Char('Run Deprecation process Number', track_visibility='always')
-    process_date = fields.Date()
+    process_date = fields.Date(readonly=True)
     process_period_id = fields.Many2one('asset_management.calendar_line', on_delete="cascade",
-                                        track_visibility='onchange')
-    book_id = fields.Many2one('asset_management.book', on_delete="cascade", track_visibility='onchange')
+                                        track_visibility='onchange',readonly=True)
+    book_id = fields.Many2one('asset_management.book', on_delete="cascade", track_visibility='onchange',readonly=True)
     dep_run_process_lines = fields.One2many('asset_management.deprunprocess_line', 'dep_run_process_id')
     reinstall_flag = fields.Boolean()
     dep_on2many_view = fields.Boolean(default=True)
+    end_of_period = fields.Boolean(compute="_end_of_the_period")
 
     @api.model
     def create(self, vals):
@@ -2492,6 +2514,8 @@ class DepRunProcess(models.Model):
 
     @api.multi
     def reinstall(self):
+        if self.reinstall_flag or self.end_of_period :
+            raise ValidationError (_("You Can't reinstall this process"))
         dep_line = self.env['asset_management.depreciation'].search([('dep_run_process_id', '=', self.id)])
         date = datetime.today()
         reserved_jl_list = []
@@ -2523,6 +2547,13 @@ class DepRunProcess(models.Model):
         for record in self:
             raise ValidationError(_('Depreciation Run Process can not be deleted '))
         super(DepRunProcess, self).unlink()
+
+
+    @api.depends('book_id','process_period_id')
+    def _end_of_the_period(self):
+        for record in self:
+            if record.book_id.calendar_line_id.id != record.calendar_line_id.id :
+                record.end_of_period = True
 
 
 class DepRunProcessLine(models.Model):
