@@ -384,7 +384,7 @@ class BookAssets(models.Model):
             'view_type': 'form',
             'view_mode': 'tree,form',
             'res_model': 'asset_management.retirement',
-            'view_id': F,
+            'view_id': False,
             'domain': [('id', 'in', retirement_ids)],
 
     }

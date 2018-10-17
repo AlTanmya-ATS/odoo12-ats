@@ -2,7 +2,7 @@
 <odoo>
 
     <!--retirement form view-->
-    <record model="ir.ui.view" id="retirement_form_view">
+    <record id="retirement_view_form" model="ir.ui.view" >
         <field name="name">retirement form</field>
         <field name="model">asset_management.retirement</field>
         <field name="arch" type="xml">
@@ -306,7 +306,7 @@
         <field name="name">set asset to retire</field>
         <field name="res_model">asset_management.retirement</field>
         <field name="view_mode">form</field>
-        <field name="view_id" ref="retirement_form_view"/>
+        <field name="view_id" ref="retirement_view_form"/>
         <field name="target">current</field>
         <field name="context">{'default_asset_id':active_id}</field>
     </record>

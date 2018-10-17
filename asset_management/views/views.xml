@@ -35,7 +35,7 @@
             <field name="context" eval="{'search_default_my_retirement': 1}"/>
             <field name="view_ids" eval="[(5, 0, 0),
                     (0, 0, {'view_mode': 'tree', 'view_id': ref('retirement_tree_view')}),
-                    (0, 0, {'view_mode': 'form', 'view_id': ref('retirement_form_view')})]"/>
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('retirement_view_form')})]"/>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first retirement
                 </p>
