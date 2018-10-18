@@ -9,7 +9,11 @@
             <field name="arch" type="xml">
                 <tree string="Retirement Tree">
                     <field name="name"/>
+                    <field name="asset_id"/>
+                    <field name="book_id"/>
                     <field name="retire_date"/>
+                    <field name="retired_cost"/>
+                    <field name="state"/>
                 </tree>
             </field>
         </record>
@@ -180,7 +184,6 @@
                     <field name="residual_value"/>
                     <field name="original_cost"/>
                     <field name="method"/>
-                    <field name="state"/>
                 </tree>
             </field>
         </record>
@@ -221,7 +224,8 @@
             <field name="model">asset_management.assignment</field>
             <field name="arch" type="xml">
                 <tree string="Assignment Tree" create="false" edit="false">
-                    <field name="name"/>
+                    <field name="asset_id"/>
+                    <field name="book_id"/>
                     <field name="location_id"/>
                     <field name="responsible_id"/>
                     <field name="percentage"/>
@@ -266,9 +270,9 @@
             <field name="model">asset_management.source_line</field>
             <field name="arch" type="xml">
                 <tree string="Source Line Tree" edit="false" create="false">
-                    <field name="name"/>
+                    <field name="asset_id"/>
+                    <field name="book_id"/>
                     <field name="source_type"/>
-                    <field name="invoice_id"/>
                 </tree>
             </field>
         </record>
@@ -308,7 +312,10 @@
             <field name="arch" type="xml">
                 <tree string="Transaction Tree" create="false" edit="false">
                     <field name="name"/>
+                    <field name="book_id"/>
+                    <field name="asset_id"/>
                     <field name="trx_type"/>
+                    <field name="trx_date"/>
                 </tree>
             </field>
         </record>
@@ -350,7 +357,9 @@
                     <field name="name"/>
                     <field name="book_id"/>
                     <field name="asset_id"/>
+                    <field name="depreciation_date"/>
                     <field name="depreciated_value"/>
+                    <field name="dep_run_process_id"/>
                 </tree>
             </field>
         </record>
@@ -391,6 +400,8 @@
                     <field name="category_id"/>
                     <field name="book_id"/>
                     <field name="depreciation_method"/>
+                    <field name="method_time"/>
+                    <field name="journal_id"/>
                 </tree>
             </field>
         </record>
@@ -540,9 +551,9 @@
             <field name="arch" type="xml">
                 <tree string="Depreciation Run Process tree" edit="false" create="false">
                     <field name="name"/>
-                    <field name="process_date"/>
-                    <field name="process_period_id"/>
                     <field name="book_id"/>
+                    <field name="process_period_id"/>
+                    <field name="process_date"/>
                 </tree>
             </field>
         </record>

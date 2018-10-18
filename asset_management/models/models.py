@@ -577,9 +577,10 @@ class BookAssets(models.Model):
 
         if 'assign_change_flag' in values:
             if self.assign_change_flag:
-                # self._create_assignment()
-                self.assignment_id = new_assignment
-                self.assign_change_flag = assign_change_flag
+                # self.assignment_id = new_assignment
+                # self.assign_change_flag = assign_change_flag
+                self.write({'assignment_id':new_assignment,
+                           'assign_change_flag':assign_change_flag})
 
         if self.state == 'draft':
             if 'category_id' in values:
