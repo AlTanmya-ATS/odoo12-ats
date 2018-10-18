@@ -247,8 +247,8 @@
                             <field name="percentage" attrs="{'readonly':[('history_flag','=',True)]}"/>
                             <field name="responsible_id"  attrs="{'readonly':[('history_flag','=',True)]}"/>
                             <field name="location_id" attrs="{'readonly':[('history_flag','=',True)]}"/>
-                            <field name="date_from" attrs="{'readonly':[('history_flag','=',True)]}"/>
-                            <field name="date_to" attrs="{'readonly':[('history_flag','=',True)]}"/>
+                            <field name="date_from" />
+                            <field name="date_to"/>
                             <field name="comments" attrs="{'readonly':[('history_flag','=',True)]}"/>
                         </group>
                     </group>
@@ -398,7 +398,8 @@
                     <notebook>
                         <page name="assignment" string="Assignment">
                             <field name="assignment_id" widget="section_and_note_one2many"
-                                   context="{'default_book_assets_id':id,'form_view_ref':'asset_management.assignment_form_one2many_view','book_one2many_view':book_one2many_view}"
+                                   context="{'default_book_assets_id':id,'form_view_ref':'asset_management.assignment_form_one2many_view',
+                                   'book_one2many_view':book_one2many_view}"
                                    attrs="{'readonly':[('state','=','close')]}">
                                 <tree string="Assignment">
                                     <field name="responsible_id"/>

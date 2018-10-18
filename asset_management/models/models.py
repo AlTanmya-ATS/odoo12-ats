@@ -679,6 +679,7 @@ class BookAssets(models.Model):
         elif self.prorate_date < self.book_id.calendar_line_id.start_date:
             new_assign = self.assignment_id.filtered(lambda x: not x.history_flag and not x.date_to)
             new_assignment = [(2, line_id.id, False) for line_id in new_assign]
+            depreciation_line = self.depreciation_line_ids.filtered(lambda x: x.move_check)
             for assign in new_assign:
                 for tag in assign.depreciation_expense_analytic_tag_ids:
                     tag_ids.append((4, tag.id, 0))
@@ -691,62 +692,76 @@ class BookAssets(models.Model):
                     'depreciation_expense_analytic_account_id': assign.depreciation_expense_analytic_account_id.id,
                     'depreciation_expense_analytic_tag_ids': tag_ids
                 }
-                depreciation_line = self.depreciation_line_ids.filtered(lambda x:x.move_check).sorted(key=lambda l: l.depreciation_date)[-1]
-                next_dep_date = self.depreciation_line_ids.filtered(lambda x:x.sequence == depreciation_line.sequence+1)
-                # for dep in depreciation_line:
-                start_period_date = self.book_id.calendar_line_id.start_date
-                if self.prorate_date <= depreciation_line.depreciation_date and not next_dep_date.depreciation_date < start_period_date:
-                        if not assign.date_from:
-                            values.update({
-                                'date_from': self.book_id.calendar_line_id.start_date,
-                                'percentage': assign.percentage,
 
-                            })
-                        else:
-                            if assign.date_from < start_period_date:
-                                # old_assign = self.env['asset_management.assignment'].search([('book_assets_id','=',self.id),('id','=',assign.id)])
-                                # start_date = datetime.strptime(start_period_date, DF).date()
+                if not depreciation_line:
+                    if not assign.date_from:
+                        values.update({
+                            'date_from': self.prorate_date,
+                            'percentage': assign.percentage,
+                        })
+                    else:
+                        values.update({
+                            'date_from': assign.date_from,
+                            'percentage': assign.percentage,
+                        })
+                else:
+                    depreciation_line = depreciation_line.sorted(key=lambda l: l.depreciation_date)[-1]
+                # depreciation_line = self.depreciation_line_ids.filtered(lambda x:x.move_check).sorted(key=lambda l: l.depreciation_date)[-1]
+                    next_dep_date = self.depreciation_line_ids.filtered(lambda x:x.sequence == depreciation_line.sequence+1)
+                    # for dep in depreciation_line:
+                    start_period_date = self.book_id.calendar_line_id.start_date
+                    if self.prorate_date <= depreciation_line.depreciation_date and not next_dep_date.depreciation_date < start_period_date:
+                            if not assign.date_from:
                                 values.update({
-                                    'date_from': start_period_date,
+                                    'date_from': self.book_id.calendar_line_id.start_date,
+                                    'percentage': assign.percentage,
+
+                                })
+                            else:
+                                if assign.date_from < start_period_date:
+                                    # old_assign = self.env['asset_management.assignment'].search([('book_assets_id','=',self.id),('id','=',assign.id)])
+                                    # start_date = datetime.strptime(start_period_date, DF).date()
+                                    values.update({
+                                        'date_from': start_period_date,
+                                        'percentage': assign.percentage,
+                                    })
+                                    for ss in old:
+                                        if ss.get('id') == assign.id:
+                                            values2 = {
+                                                'book_assets_id': self.id,
+                                                'depreciation_expense_account': ss.get('depreciation_expense_account'),
+                                                'responsible_id': ss.get('responsible_id'),
+                                                'location_id': ss.get('location_id'),
+                                                'comments': ss.get('comments'),
+                                                'depreciation_expense_analytic_account_id': ss.get(
+                                                'depreciation_expense_analytic_account_id'),
+                                                'depreciation_expense_analytic_tag_ids': ss.get('tag_ids'),
+                                                'date_to': start_period_date + relativedelta(days=-1),
+                                                'history_flag': True,
+                                                'date_from': ss.get('date_from'),
+                                                'percentage': ss.get('percentage')
+                                            }
+                                            new_assignment.append((0, False, values2))
+                                elif assign.date_from >= start_period_date:
+                                    values.update({
+                                        'date_from': assign.date_from,
+                                        'percentage': assign.percentage,
+                                    })
+
+                            # break
+
+                    elif self.prorate_date <= depreciation_line.depreciation_dateand and next_dep_date.depreciation_date < start_period_date :
+                            if not assign.date_from:
+                                values.update({
+                                    'date_from': self.prorate_date,
                                     'percentage': assign.percentage,
                                 })
-                                for ss in old:
-                                    if ss.get('id') == assign.id:
-                                        values2 = {
-                                            'book_assets_id': self.id,
-                                            'depreciation_expense_account': ss.get('depreciation_expense_account'),
-                                            'responsible_id': ss.get('responsible_id'),
-                                            'location_id': ss.get('location_id'),
-                                            'comments': ss.get('comments'),
-                                            'depreciation_expense_analytic_account_id': ss.get(
-                                                'depreciation_expense_analytic_account_id'),
-                                            'depreciation_expense_analytic_tag_ids': ss.get('tag_ids'),
-                                            'date_to': start_period_date + relativedelta(days=-1),
-                                            'history_flag': True,
-                                            'date_from': ss.get('date_from'),
-                                            'percentage': ss.get('percentage')
-                                        }
-                                        new_assignment.append((0, False, values2))
-                            elif assign.date_from >= start_period_date:
+                            else:
                                 values.update({
                                     'date_from': assign.date_from,
                                     'percentage': assign.percentage,
                                 })
-
-                        # break
-
-                elif depreciation_line.depreciation_date >= self.prorate_date and next_dep_date.depreciation_date < start_period_date :
-                        if not assign.date_from:
-                            values.update({
-                                'date_from': self.prorate_date,
-                                'percentage': assign.percentage,
-                            })
-                        else:
-                            values.update({
-                                'date_from': assign.date_from,
-                                'percentage': assign.percentage,
-                            })
-                        # break
+                            # break
 
                 new_assignment.append((0, False, values))
         assign_change_flag = False
@@ -1184,7 +1199,6 @@ class Assignment(models.Model):
     asset_id = fields.Many2one("asset_management.asset", string="Asset", on_delete='cascade', compute="_get_asset_name",
                                track_visibility='always')
     depreciation_expense_account = fields.Many2one('account.account', on_delete='set_null', required=True,
-                                                   domain=[('user_type_id', '=', 'Depreciation')],
                                                    track_visibility='onchange')
     responsible_id = fields.Many2one('hr.employee', on_delete='set_null', track_visibility='onchange')
     location_id = fields.Many2one('asset_management.location', required=True, domain=[('active', '=', True)],
@@ -1218,7 +1232,8 @@ class Assignment(models.Model):
     def _dep_expense_domain(self):
         for record in self:
             if record.responsible_id or record.book_id:
-                return {'domain': {'depreciation_expense_account': [('company_id', '=', record.book_id.company_id.id)],
+                return {'domain': {'depreciation_expense_account': [('company_id', '=', record.book_id.company_id.id),
+                                                                    ('user_type_id', '=', 'Depreciation')],
                                    'depreciation_expense_analytic_account_id': [
                                        ('company_id', '=', record.book_id.company_id.id)]
 
@@ -2552,7 +2567,7 @@ class DepRunProcess(models.Model):
     @api.depends('book_id','process_period_id')
     def _end_of_the_period(self):
         for record in self:
-            if record.book_id.calendar_line_id.id != record.calendar_line_id.id :
+            if record.book_id.calendar_line_id.id != record.process_period_id.id :
                 record.end_of_period = True
 
 
