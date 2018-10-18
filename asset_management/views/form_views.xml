@@ -2,12 +2,13 @@
 <odoo>
 
     <!--retirement form view-->
-    <record id="retirement_view_form" model="ir.ui.view" >
+    <record model="ir.ui.view" id="retirement_form_view">
         <field name="name">retirement form</field>
         <field name="model">asset_management.retirement</field>
         <field name="arch" type="xml">
             <form string="Retirement Form" edit="false">
                 <header>
+
                     <button name="reinstall" string="Reinstall" type="object" class="oe_highlight" attrs="{'invisible':['|',('id','=',False),
                                                             ('state','=','reinstall')]}"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,complete"/>
@@ -223,29 +224,28 @@
         <field name="name">assignment.form</field>
         <field name="model">asset_management.assignment</field>
         <field name="arch" type="xml">
-            <form string="Assignment Form" create="false" edite="false">
+            <form string="Assignment Form" create="false" edit="false">
                 <sheet>
                     <group>
                         <group>
                             <field name="asset_id"/>
                             <field name="book_id"/>
-                            <field name="depreciation_expense_account"
-                                   attrs="{'readonly':[('history_flag','=',True)]}"/>
+                            <field name="depreciation_expense_account"/>
                             <field name="depreciation_expense_analytic_account_id"
                                    groups="analytic.group_analytic_accounting"
                                    placeholder="depreciation expense analytic account"
-                                   attrs="{'history_flag':[('history_flag','=',True)]}"/>
+                                   attrs="{'readonly':[('history_flag','=',True)]}"/>
                             <field name="depreciation_expense_analytic_tag_ids"
                                    groups="analytic.group_analytic_accounting" widget="many2many_tags"
                                    placeholder="depreciation expense analytic tag"
-                                   attrs="{'readonly':[('history_flag','=',True)]}"/>
+                                    attrs="{'readonly':[('history_flag','=',True)]}"/>
 
                         </group>
                         <group>
                             <field name="book_assets_id" invisible="1"/>
                             <field name="history_flag" invisible="1"/>
                             <field name="percentage" attrs="{'readonly':[('history_flag','=',True)]}"/>
-                            <field name="responsible_id" attrs="{'readonly':[('history_flag','=',True)]}"/>
+                            <field name="responsible_id"  attrs="{'readonly':[('history_flag','=',True)]}"/>
                             <field name="location_id" attrs="{'readonly':[('history_flag','=',True)]}"/>
                             <field name="date_from" attrs="{'readonly':[('history_flag','=',True)]}"/>
                             <field name="date_to" attrs="{'readonly':[('history_flag','=',True)]}"/>
@@ -306,7 +306,7 @@
         <field name="name">set asset to retire</field>
         <field name="res_model">asset_management.retirement</field>
         <field name="view_mode">form</field>
-        <field name="view_id" ref="retirement_view_form"/>
+        <field name="view_id" ref="retirement_form_view"/>
         <field name="target">current</field>
         <field name="context">{'default_asset_id':active_id}</field>
     </record>
@@ -846,8 +846,8 @@
     <record id="dep_run_process_form_view" model="ir.ui.view">
         <field name="name">dep run process form</field>
         <field name="model">asset_management.deprunprocess</field>
-        <field name="arch" type="xml" create="false" edit="false">
-            <form string="Depreciation Run Process Form">
+        <field name="arch" type="xml">
+            <form string="Depreciation Run Process Form" create="false" edit="false">
                 <header>
                     <button name="reinstall" string="Reinstall" type="object" class="oe_highlight" attrs="{'invisible':['|','|',('id','=',False),
                                                             ('reinstall_flag','=',True),('end_of_period','=',True)]}"/>
