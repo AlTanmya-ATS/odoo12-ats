@@ -29,9 +29,10 @@ class Asset(models.Model):
     depreciation_line_ids = fields.One2many(comodel_name="asset_management.depreciation", inverse_name="asset_id",
                                             string="depreciation", on_delete='cascade')
     asset_serial_number = fields.Char(string='Serial Number', track_visibility='onchange')
-    asset_tag_number = fields.Many2many('asset_management.tag', relation="asset_tag",column1="asset_id",column2="tag_id",track_visibility='onchange')
+    asset_tag_number = fields.Many2many('asset_management.tag', relation="asset_tag", column1="asset_id",
+                                        column2="tag_id", track_visibility='onchange')
     serial_flag = fields.Boolean()
-    asset_with_category = fields.Boolean(related='category_id.asset_with_category')
+    #     asset_with_category = fields.Boolean(related='category_id.asset_with_category')
     currency_id = fields.Many2one('res.currency', string='Currency', required=True, readonly=True,
                                   default=lambda self: self.env.user.company_id.currency_id.id)
     entry_asset_count = fields.Integer(compute='_entry_asset_count', string='# Asset Entries')
@@ -51,12 +52,13 @@ class Asset(models.Model):
     #             else:
     #                 self.serial_flag = False
 
-#uniqe asset on based of serial and tag number
+    # uniqe asset on based of serial and tag number
     @api.constrains('asset_serial_number', 'asset_tag_number')
     def _unique_serial_tag_number_on_asset(self):
         for rec in self:
             if rec.asset_serial_number or rec.asset_tag_number:
-                x = self.env['asset_management.asset'].search([('asset_serial_number', '=',rec.asset_serial_number),('id','!=',self.id)])
+                x = self.env['asset_management.asset'].search(
+                    [('asset_serial_number', '=', rec.asset_serial_number), ('id', '!=', self.id)])
                 if x:
                     for xx in x:
                         p_id = [p.id for p in xx.asset_tag_number]
@@ -121,7 +123,7 @@ class Asset(models.Model):
                 [('asset_id', '=', entries.asset_id.id), ('book_id', '=', book_id),
                  ('trx_date', '<=', period_id.end_date), ('move_posted_check', '=', False)])
             sequence = 0
-            #create moves for depreciation lines
+            # create moves for depreciation lines
             for deprecation in dep_line:
                 if not deprecation.move_check:
                     deprecation.create_move()
@@ -135,7 +137,7 @@ class Asset(models.Model):
                     new_moved_lines += deprecation
                 else:
                     old_moved_lines += deprecation
-            #create moves for transaction lines
+            # create moves for transaction lines
             for trx in trx_lines:
                 if not trx.move_check and not trx.asset_id.asset_type == 'expense':
                     if trx.trx_type == 'full_retirement' or trx.trx_type == 'partial_retirement':
@@ -173,7 +175,6 @@ class Asset(models.Model):
         super(Asset, self).unlink()
 
 
-
 class Category(models.Model):
     _name = 'asset_management.category'
     _inherit = ['mail.thread', 'mail.activity.mixin']
@@ -185,7 +186,7 @@ class Category(models.Model):
                                         on_delete='cascade', )
     depreciation_method = fields.Selection([('linear', 'Linear'), ('degressive', 'Degressive')],
                                            default='linear', track_visibility='onchange')
-    asset_with_category = fields.Boolean()
+    asset_with_category = fields.Boolean(compute="_compute_asset_with_category")
     active = fields.Boolean(default=True, track_visibility='onchange')
     category_one2many_view = fields.Boolean(default=True, readonly=True)
     _sql_constraints = [
@@ -199,12 +200,62 @@ class Category(models.Model):
         return super(Category, self).create(values)
 
     @api.multi
+    def write(self, values):
+        res = super(Category, self).write(values)
+        if not self.category_books_id:
+            raise ValidationError(_('Category must at lest to one book'))
+        return res
+
+    @api.depends('name')
+    def _compute_asset_with_category(self):
+        for record in self:
+            category_in_asset = record.env['asset_management.book_assets'].search([('category_id', '=', record.id)])
+            if category_in_asset:
+                record.asset_with_category = True
+
+    @api.multi
     def unlink(self):
         for record in self:
-            category_in_asset = record.env['asset_management.book_asset'].search([('category_id', '=', record.id)])[0]
+            category_in_asset = record.env['asset_management.book_assets'].search([('category_id', '=', record.id)])
             if category_in_asset:
                 raise ValidationError(_('Category can not be deleted '))
         super(Category, self).unlink()
+
+    @api.multi
+    def map_books(self):
+        """ copy and map books from old to new category """
+        category_books = []
+        category_books_ids = self.env['asset_management.category_books'].with_context(active_test=False).search(
+            [('category_id', '=', self.id)]).ids
+        for book in self.env['asset_management.category_books'].browse(category_books_ids):
+            new_category_book = {
+                'book_id': book.book_id.id,
+                'asset_cost_account': book.asset_cost_account.id,
+                'asset_clearing_account': book.asset_clearing_account.id,
+                'depreciation_expense_account': book.asset_clearing_account.id,
+                'accumulated_depreciation_account': book.asset_clearing_account.id,
+                'journal_id': book.journal_id.id,
+                'life_months': book.life_months,
+                'method_time': book.method_time,
+                'method_number': book.method_number,
+                'depreciation_method': book.depreciation_method,
+                'default_analytic_account_id': book.default_analytic_account_id.id if book.default_analytic_account_id else False,
+                'default_analytic_tag_ids': [(4, tag.id, 0) for tag in
+                                             book.default_analytic_tag_ids] if book.default_analytic_tag_ids else False,
+
+            }
+            category_books += [(0, 0, new_category_book)]
+        return category_books
+
+    @api.multi
+    def copy(self, default=None):
+        if default is None:
+            default = {}
+        if not default.get('name'):
+            default['name'] = _("%s(copy)") % self.name
+        if not default.get('category_books_id'):
+            default['category_books_id'] = self.map_books()
+        return super(Category, self).copy(default)
 
 
 class Book(models.Model):
@@ -217,7 +268,8 @@ class Book(models.Model):
                                      'asset_management.book'), track_visibility='onchange')
     cost_of_removal_gain_account = fields.Many2one('account.account', on_delete='set_null', track_visibility='onchange')
     cost_of_removal_loss_account = fields.Many2one('account.account', on_delete='set_null', track_visibility='onchange')
-    book_with_cate = fields.Boolean()
+    book_with_cate = fields.Boolean(compute="_compute_book_with_category")
+    book_with_asset = fields.Boolean(compute="_compute_book_with_asset")
     active = fields.Boolean(default=True, track_visibility='onchange')
     currency_id = fields.Many2one('res.currency', string='Currency', required=True, compute="_compute_currency")
     calendar_id = fields.Many2one('asset_management.calendar', required=True, on_delete='cascade',
@@ -228,14 +280,11 @@ class Book(models.Model):
     _sql_constraints = [
         ('book_name', 'UNIQUE(name)', 'Book name already exist..!')
     ]
-    gain_analytic_account_id = fields.Many2one('account.analytic.account', string='Analytic Account',
-                                               track_visibility='onchange')
-    gain_analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic tags',
-                                             track_visibility='onchange')
-    loss_analytic_account_id = fields.Many2one('account.analytic.account', string='Analytic Account',
-                                               track_visibility='onchange')
-    loss_analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic tags',
-                                             track_visibility='onchange')
+    default_analytic_account_id = fields.Many2one('account.analytic.account', string='Default Analytic Account',
+                                                  track_visibility='onchange')
+    default_analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Default Analytic tags',
+                                                track_visibility='onchange')
+
     allow_future_transaction = fields.Boolean(track_visibility='onchange')
 
     @api.multi
@@ -280,18 +329,27 @@ class Book(models.Model):
                 'Book deletion is prevented'))
         return super(Book, self).unlink()
 
-    #
-    # @api.onchange('company_id')
-    # def _cost_of_removal_loss_account_domain(self):
-    #     for record in self:
-    #         # if record.cost_of_removal_loss_account:
-    #             return {'domain': {'cost_of_removal_loss_account': [('company_id', '=',record.company_id.id)]
-    #                            }}
+    @api.multi
+    def copy(self, default=None):
+        if default is None:
+            default = {}
+        if not default.get('name'):
+            default['name'] = _("%s (copy)") % self.name
+        return super(Book, self).copy(default)
 
-    # @api.model
-    # def move_to_next_period(self):
-    #     for record in self:
-    #         end_of_current_peroid = record.calendar_line_id.end_date
+    @api.depends('name')
+    def _compute_book_with_category(self):
+        for record in self:
+            book_in_category = record.env['asset_management.category_books'].search([('book_id', '=', record.id)])
+            if book_in_category:
+                record.book_with_cate = True
+
+    @api.depends('name')
+    def _compute_book_with_asset(self):
+        for record in self:
+            asset_in_book = record.env['asset_management.book_assets'].search([('book_id', '=', record.id)])
+            if asset_in_book:
+                record.book_with_asset = True
 
 
 class BookAssets(models.Model):
@@ -328,7 +386,7 @@ class BookAssets(models.Model):
                                   states={'draft': [('readonly', False)]}, track_visibility='onchange')
     prorate_date = fields.Date(string='Prorate Date', compute="_compute_prorate_date", track_visibility='onchange')
     depreciated_flag = fields.Boolean(string='Depreciated', default=True, track_visibility='onchange')
-    depreciation_computation = fields.Boolean(string='Depreciated', compute="_compute_depreciation_computation")
+    depreciation_computation = fields.Boolean(compute="_compute_depreciation_computation")
     method_progress_factor = fields.Float(string='Degressive Factor', default=0.3, track_visibility='onchange')
     method_number = fields.Integer(string='Number of Depreciation',
                                    help="The number of depreciations needed to depreciate your asset",
@@ -364,6 +422,10 @@ class BookAssets(models.Model):
     assign_change_flag = fields.Boolean()
     book_one2many_view = fields.Boolean(default=True, readonly=True)
     retirement_count = fields.Integer(compute='_asset_retirement_count')
+    analytic_account_id = fields.Many2one('account.analytic.account', string='Analytic Account',
+                                          track_visibility='onchange')
+    analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic Tag',
+                                        track_visibility='onchange')
 
     @api.multi
     @api.depends('asset_id', 'book_id')
@@ -375,8 +437,11 @@ class BookAssets(models.Model):
 
     @api.multi
     def open_retired_window(self):
-        retirement_ids = self.env['asset_management.retirement'].browse(
+        retirement_record = []
+        retirement_ids = self.env['asset_management.retirement'].search(
             [('asset_id', '=', self.asset_id.id), ('book_id', '=', self.book_id.id)])
+        for retirement in retirement_ids:
+            retirement_record.append(retirement.id)
 
         return {
             'name': _('Retirement'),
@@ -385,9 +450,9 @@ class BookAssets(models.Model):
             'view_mode': 'tree,form',
             'res_model': 'asset_management.retirement',
             'view_id': False,
-            'domain': [('id', 'in', retirement_ids)],
+            'domain': [('id', 'in', retirement_record)],
 
-    }
+        }
 
     @api.model
     def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
@@ -547,11 +612,14 @@ class BookAssets(models.Model):
         old_category = self.category_id
         old_assign = self.assignment_id.filtered(lambda x: not x.history_flag and not x.date_to and x.date_from)
         old = []
+        old_responsable = []
         for x in old_assign:
+            valu = {
+                'assignment_id': x.responsible_id.id if x.responsible_id else False,
+                'location_id': x.location_id.id
+            }
+            old_responsable.append((0, False, valu))
             if x.date_from < self.book_id.calendar_line_id.start_date:
-                tag_ids = []
-                for tag in x.depreciation_expense_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
                 values2 = {
                     'id': x.id,
                     'book_assets_id': self.id,
@@ -559,28 +627,22 @@ class BookAssets(models.Model):
                     'responsible_id': x.responsible_id.id,
                     'location_id': x.location_id.id,
                     'comments': x.comments,
-                    'depreciation_expense_analytic_account_id': x.depreciation_expense_analytic_account_id.id,
-                    'depreciation_expense_analytic_tag_ids': tag_ids,
+                    'depreciation_expense_analytic_account_id': x.analytic_account_id.id,
+                    'depreciation_expense_analytic_tag_ids': [(4, tag.id, 0) for tag in x.analytic_tag_ids],
                     'percentage': x.percentage,
                     'date_from': x.date_from
                 }
                 old.append(values2)
 
         super(BookAssets, self).write(values)
-        # if not self.source_line_ids:
-        #     raise ValidationError(_('Source line must be added to book'))
-
-        # if 'assignment_id' in values :
-        #     self.prorate_date
 
         new_assignment, assign_change_flag = self._create_assignment(old)
 
         if 'assign_change_flag' in values:
             if self.assign_change_flag:
-                # self.assignment_id = new_assignment
-                # self.assign_change_flag = assign_change_flag
-                self.write({'assignment_id':new_assignment,
-                           'assign_change_flag':assign_change_flag})
+                # self._create_assignment()
+                self.assignment_id = new_assignment
+                self.assign_change_flag = assign_change_flag
 
         if self.state == 'draft':
             if 'category_id' in values:
@@ -639,10 +701,12 @@ class BookAssets(models.Model):
                     if not self.assign_change_flag:
                         responsable = []
                         location = []
-                        for assignment in self.assignment_id:
-                            if assignment.responsible_id:
-                                responsable.append(assignment.responsible_id.name)
-                            location.append(assignment.location_id.name)
+                        for record in self.assignment_id:
+                            valu = {
+                                'assignment_id': record.responsible_id.id if record.responsible_id else False,
+                                'location_id': record.location_id.id
+                            }
+                            responsable.append((0, False, valu))
                         self.env['asset_management.transaction'].create({
                             'book_assets_id': self.id,
                             'book_id': self.book_id.id,
@@ -651,9 +715,8 @@ class BookAssets(models.Model):
                             'trx_type': 'transfer',
                             'cost': self.current_cost,
                             'trx_date': datetime.today(),
-                            'trx_details': 'Responsible : ' + str(responsable) + '\nLocation : ' + str(location)
-
-                            if responsable else 'Location : ' + str(location)
+                            'old_assignment_id': old_responsable,
+                            'new_assignment_id': responsable,
                         })
 
     def _create_assignment(self, old):
@@ -662,8 +725,6 @@ class BookAssets(models.Model):
         if self.prorate_date >= self.book_id.calendar_line_id.start_date:
             new_assignment = [(2, line_id.id, False) for line_id in self.assignment_id]
             for assign in self.assignment_id:
-                for tag in assign.depreciation_expense_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
                 vals = {
                     'book_assets_id': self.id,
                     'depreciation_expense_account': assign.depreciation_expense_account.id,
@@ -672,8 +733,8 @@ class BookAssets(models.Model):
                     'date_from': self.prorate_date,
                     'comments': assign.comments,
                     'percentage': assign.percentage,
-                    'depreciation_expense_analytic_account_id': assign.depreciation_expense_analytic_account_id.id,
-                    'depreciation_expense_analytic_tag_ids': tag_ids
+                    'analytic_account_id': assign.analytic_account_id.id,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in assign.analytic_tag_ids]
                 }
                 new_assignment.append((0, False, vals))
 
@@ -682,16 +743,14 @@ class BookAssets(models.Model):
             new_assignment = [(2, line_id.id, False) for line_id in new_assign]
             depreciation_line = self.depreciation_line_ids.filtered(lambda x: x.move_check)
             for assign in new_assign:
-                for tag in assign.depreciation_expense_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
                 values = {
                     'book_assets_id': self.id,
                     'depreciation_expense_account': assign.depreciation_expense_account.id,
                     'responsible_id': assign.responsible_id.id,
                     'location_id': assign.location_id.id,
                     'comments': assign.comments,
-                    'depreciation_expense_analytic_account_id': assign.depreciation_expense_analytic_account_id.id,
-                    'depreciation_expense_analytic_tag_ids': tag_ids
+                    'analytic_account_id': assign.analytic_account_id.id,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in assign.analytic_tag_ids]
                 }
 
                 if not depreciation_line:
@@ -707,62 +766,63 @@ class BookAssets(models.Model):
                         })
                 else:
                     depreciation_line = depreciation_line.sorted(key=lambda l: l.depreciation_date)[-1]
-                # depreciation_line = self.depreciation_line_ids.filtered(lambda x:x.move_check).sorted(key=lambda l: l.depreciation_date)[-1]
-                    next_dep_date = self.depreciation_line_ids.filtered(lambda x:x.sequence == depreciation_line.sequence+1)
+                    # depreciation_line = self.depreciation_line_ids.filtered(lambda x:x.move_check).sorted(key=lambda l: l.depreciation_date)[-1]
+                    next_dep_date = self.depreciation_line_ids.filtered(
+                        lambda x: x.sequence == depreciation_line.sequence + 1)
                     # for dep in depreciation_line:
                     start_period_date = self.book_id.calendar_line_id.start_date
                     if self.prorate_date <= depreciation_line.depreciation_date and not next_dep_date.depreciation_date < start_period_date:
-                            if not assign.date_from:
+                        if not assign.date_from:
+                            values.update({
+                                'date_from': self.book_id.calendar_line_id.start_date,
+                                'percentage': assign.percentage,
+
+                            })
+                        else:
+                            if assign.date_from < start_period_date:
+                                # old_assign = self.env['asset_management.assignment'].search([('book_assets_id','=',self.id),('id','=',assign.id)])
+                                # start_date = datetime.strptime(start_period_date, DF).date()
                                 values.update({
-                                    'date_from': self.book_id.calendar_line_id.start_date,
-                                    'percentage': assign.percentage,
-
-                                })
-                            else:
-                                if assign.date_from < start_period_date:
-                                    # old_assign = self.env['asset_management.assignment'].search([('book_assets_id','=',self.id),('id','=',assign.id)])
-                                    # start_date = datetime.strptime(start_period_date, DF).date()
-                                    values.update({
-                                        'date_from': start_period_date,
-                                        'percentage': assign.percentage,
-                                    })
-                                    for ss in old:
-                                        if ss.get('id') == assign.id:
-                                            values2 = {
-                                                'book_assets_id': self.id,
-                                                'depreciation_expense_account': ss.get('depreciation_expense_account'),
-                                                'responsible_id': ss.get('responsible_id'),
-                                                'location_id': ss.get('location_id'),
-                                                'comments': ss.get('comments'),
-                                                'depreciation_expense_analytic_account_id': ss.get(
-                                                'depreciation_expense_analytic_account_id'),
-                                                'depreciation_expense_analytic_tag_ids': ss.get('tag_ids'),
-                                                'date_to': start_period_date + relativedelta(days=-1),
-                                                'history_flag': True,
-                                                'date_from': ss.get('date_from'),
-                                                'percentage': ss.get('percentage')
-                                            }
-                                            new_assignment.append((0, False, values2))
-                                elif assign.date_from >= start_period_date:
-                                    values.update({
-                                        'date_from': assign.date_from,
-                                        'percentage': assign.percentage,
-                                    })
-
-                            # break
-
-                    elif self.prorate_date <= depreciation_line.depreciation_dateand and next_dep_date.depreciation_date < start_period_date :
-                            if not assign.date_from:
-                                values.update({
-                                    'date_from': self.prorate_date,
+                                    'date_from': start_period_date,
                                     'percentage': assign.percentage,
                                 })
-                            else:
+                                for ss in old:
+                                    if ss.get('id') == assign.id:
+                                        values2 = {
+                                            'book_assets_id': self.id,
+                                            'depreciation_expense_account': ss.get('depreciation_expense_account'),
+                                            'responsible_id': ss.get('responsible_id'),
+                                            'location_id': ss.get('location_id'),
+                                            'comments': ss.get('comments'),
+                                            'analytic_account_id': ss.get(
+                                                'analytic_account_id'),
+                                            'analytic_tag_ids': ss.get('tag_ids'),
+                                            'date_to': start_period_date + relativedelta(days=-1),
+                                            'history_flag': True,
+                                            'date_from': ss.get('date_from'),
+                                            'percentage': ss.get('percentage')
+                                        }
+                                        new_assignment.append((0, False, values2))
+                            elif assign.date_from >= start_period_date:
                                 values.update({
                                     'date_from': assign.date_from,
                                     'percentage': assign.percentage,
                                 })
-                            # break
+
+                        # break
+
+                    elif self.prorate_date <= depreciation_line.depreciation_dateand and next_dep_date.depreciation_date < start_period_date:
+                        if not assign.date_from:
+                            values.update({
+                                'date_from': self.prorate_date,
+                                'percentage': assign.percentage,
+                            })
+                        else:
+                            values.update({
+                                'date_from': assign.date_from,
+                                'percentage': assign.percentage,
+                            })
+                        # break
 
                 new_assignment.append((0, False, values))
         assign_change_flag = False
@@ -839,7 +899,8 @@ class BookAssets(models.Model):
                     'method_time': category_book.method_time,
                     'life_months': category_book.life_months,
                     'method_number': category_book.method_number,
-                    # 'category_id':category_book.category_id.id,
+                    'analytic_account_id': category_book.default_analytic_account_id,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in category_book.default_analytic_tag_ids]
                 }
             }
 
@@ -930,13 +991,18 @@ class BookAssets(models.Model):
             responsable = []
             location = []
             for record in self.assignment_id:
-                if record.responsible_id:
-                    responsable.append(record.responsible_id.name)
-                location.append(record.location_id.name)
-                # if record.date_from:
-                #     date=record.date_from
-                # else:
-                #     date='not specified'
+                valu = {
+                    'assignment_id': record.responsible_id.id if record.responsible_id else False,
+                    'location_id': record.location_id.id
+                }
+                responsable.append((0, False, valu))
+            #                 if record.responsible_id:
+            #                     responsable.append(record.responsible_id.name)
+            #                 location.append(record.location_id.name)
+            # if record.date_from:
+            #     date=record.date_from
+            # else:
+            #     date='not specified'
             self.env['asset_management.transaction'].create({
                 'book_assets_id': self.id,
                 'book_id': self.book_id.id,
@@ -945,7 +1011,8 @@ class BookAssets(models.Model):
                 'trx_type': 'transfer',
                 'cost': self.current_cost,
                 'trx_date': self.prorate_date,
-                'trx_details': 'Responsible : ' + str(responsable) + '\nLocation : ' + str(location)
+                #                 'trx_details': 'Responsible : ' + str(responsable) + '\nLocation : ' + str(location),
+                'new_assignment_id': responsable
 
             })
             if self.asset_id.asset_type == 'capitalize':
@@ -1170,24 +1237,23 @@ class BookAssets(models.Model):
             raise ValidationError(_('Asset can not be deleted '))
         super(BookAssets, self).unlink()
 
-    # @api.multi
-    # def delete_source(self):
-    #     text = 'Are you sure you want to delete a source line'
-    #     value = self.env['asset_management.confirmation_wizard'].sudo().create({'text': text,
-    #                                                                  })
-    #     return {
-    #                 'type': 'ir.actions.act_window',
-    #                 'name': _('Warning'),
-    #                 'view_type': 'form',
-    #                 'view_mode': 'form',
-    #                 'res_model': 'asset_management.confirmation_wizard',
-    #                 'res_id': value.id,
-    #                 'target': 'new',
-    #                 'view_id': self.env.ref('asset_management.confirmation_wizard_form', False).id,
-    #                 'context': {'active_id':self.id,
-    #                             }
-    #     }
-    #
+    @api.multi
+    def delete_source(self):
+        text = 'Are you sure you want to delete a source line'
+        #         value = self.env['asset_management.confirmation_wizard'].sudo().create({'text': text,
+        #                                                                      })
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Warning'),
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'asset_management.confirmation_wizard',
+            #                     'res_id': value.id,
+            'target': 'new',
+            'view_id': self.env.ref('asset_management.confirmation_wizard_form', False).id,
+            'context': {'active_id': self.id,
+                        }
+        }
 
 
 class Assignment(models.Model):
@@ -1209,10 +1275,10 @@ class Assignment(models.Model):
     date_from = fields.Date(track_visibility='onchange', readonly=True)
     comments = fields.Text(track_visibility='onchange')
     percentage = fields.Float(default=100, track_visibility='onchange')
-    depreciation_expense_analytic_account_id = fields.Many2one('account.analytic.account', string='Analytic Account',
-                                                               track_visibility='onchange')
-    depreciation_expense_analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic tags',
-                                                             track_visibility='onchange')
+    analytic_account_id = fields.Many2one('account.analytic.account', string='Analytic Account',
+                                          track_visibility='onchange')
+    analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic tags',
+                                        track_visibility='onchange')
 
     @api.model
     def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
@@ -1229,15 +1295,14 @@ class Assignment(models.Model):
             res['arch'] = etree.tostring(doc, encoding='unicode')
         return res
 
-    @api.onchange('book_id','responsible_id')
+    @api.onchange('book_id', 'responsible_id')
     def _dep_expense_domain(self):
         for record in self:
             if record.responsible_id or record.book_id:
                 return {'domain': {'depreciation_expense_account': [('company_id', '=', record.book_id.company_id.id),
                                                                     ('user_type_id', '=', 'Depreciation')],
-                                   'depreciation_expense_analytic_account_id': [
+                                   'analytic_account_id': [
                                        ('company_id', '=', record.book_id.company_id.id)]
-
                                    }}
 
     @api.constrains('percentage')
@@ -1264,18 +1329,16 @@ class Assignment(models.Model):
 
         category_book = self.env['asset_management.category_books'].search(
             [('book_id', '=', self.book_id.id), ('category_id', '=', self.book_assets_id.category_id.id)])
-        tag_ids = []
-        for tag in category_book.depreciation_expense_analytic_tag_ids:
-            tag_ids.append((4, tag.id, 0))
+
         value = {
             'depreciation_expense_account': category_book.depreciation_expense_account,
-            'depreciation_expense_analytic_account_id': category_book.depreciation_expense_analytic_account_id,
-            'depreciation_expense_analytic_tag_ids': tag_ids
+            #             'analytic_account_id': category_book.depreciation_expense_analytic_account_id,
+            #             'analytic_tag_ids': tag_ids
         }
         for k, v in value.items():
             setattr(self, k, v)
 
-#prevent editing in asset assignment if the entries for the current period is generated
+    # prevent editing in asset assignment if the entries for the current period is generated
     @api.multi
     def write(self, values):
         for record in self:
@@ -1284,7 +1347,8 @@ class Assignment(models.Model):
                 depreciation_line = depreciation_line.sorted(key=lambda l: l.depreciation_date)[-1]
                 calender_period = record.book_assets_id.book_id.calendar_line_id
                 if calender_period.start_date <= depreciation_line.depreciation_date < calender_period.end_date:
-                    raise  ValidationError(_("You can't change assignment for asset with generated entries for its deprecation in this period reinstall the process to be able to"))
+                    raise ValidationError(_(
+                        "You can't change assignment for asset with generated entries for its deprecation in this period reinstall the process to be able to"))
         return super(Assignment, self).write(values)
 
     # creat transaction record when adding a new assignment and location
@@ -1373,6 +1437,14 @@ class SourceLine(models.Model):
     def create(self, values):
         values['name'] = self.env['ir.sequence'].next_by_code('asset_management.source_line.SourceLine')
         return super(SourceLine, self).create(values)
+
+    @api.constrains('amount_m_type', 'amount')
+    def _constrains_on_adding_lines(self):
+        for record in self:
+            if record.source_type == 'miscellaneous' and record.amount_m_type == 0:
+                raise ValidationError(_("source amount must not be zero"))
+            if record.source_type == 'miscellaneous' and record.amount_m_type < 0 and record.book_assets_id.net_book_value + record.amount_m_type <= 0:
+                raise ValidationError(_("source amount"))
 
     @api.onchange('invoice_id')
     def _onchange_invoice_id(self):
@@ -1497,12 +1569,10 @@ class Depreciation(models.Model):
     def create_move(self, post_move=True):
         created_moves = self.env['account.move']
         prec = self.env['decimal.precision'].precision_get('Account')
-        # current_currency = self.env['res.company'].search([('id','=',1)])[0].currency_id
         if self.depreciation_date > self.book_id.calendar_line_id.end_date:
             raise ValidationError(_('You can not create Entries for Line with Future Date'))
         journal_id = self.env['asset_management.category_books'].search(
             [('book_id', '=', self.book_id.id), ('category_id', '=', self.book_assets_id.category_id.id)]).journal_id
-        tag_ids = []
         for line in self:
             if line.move_id:
                 raise UserError(
@@ -1512,17 +1582,17 @@ class Depreciation(models.Model):
             # depreciation_date = self.env.context.get('depreciation_date') or line.depreciation_date or fields.Date.context_today(self)
             move_to_jl_date = line.book_id.calendar_line_id.end_date
             category_books = line.env['asset_management.category_books'].search(
-                [('book_id', '=', self.book_id.id), ('category_id', '=', self.book_assets_id.category_id.id)])[0]
+                [('book_id', '=', self.book_id.id), ('category_id', '=', line.book_assets_id.category_id.id)])[0]
             accumulated_depreciation_account = category_books.accumulated_depreciation_account
             # depreciation_expense_account=line.env['asset_management.assignment'].search([('asset_id','=',self.asset_id.id),('book_id','=',self.book_id.id)]).depreciation_expense_account
-            partner_id = line.env['asset_management.source_line'].search([('asset_id', '=', self.asset_id.id)])[
+            partner_id = line.env['asset_management.source_line'].search([('asset_id', '=', line.asset_id.id)])[
                 0].invoice_id.partner_id
             if partner_id is None:
                 raise ValidationError(_("Source Line must be entered"))
             asset_name = line.asset_id.name + ' (%s/%s)' % (line.sequence, len(line.asset_id.depreciation_line_ids))
             amount = current_currency.with_context(date=move_to_jl_date).compute(line.amount, company_currency)
-            for tag in category_books.accumulated_depreciation_analytic_tag_ids:
-                tag_ids.append((4, tag.id, 0))
+            #             for tag in category_books.accumulated_depreciation_analytic_tag_ids:
+            #                 tag_ids.append((4, tag.id, 0))
             move_line_1 = {
                 'name': asset_name,
                 'account_id': accumulated_depreciation_account.id,
@@ -1532,8 +1602,9 @@ class Depreciation(models.Model):
                 'partner_id': partner_id.id,
                 'currency_id': company_currency != current_currency and current_currency.id or False,
                 'amount_currency': company_currency != current_currency and - 1.0 * line.amount or 0.0,
-                'analytic_account_id': category_books.accumulated_depreciation_analytic_account_id.id if category_books.accumulated_depreciation_analytic_account_id else False,
-                'analytic_tag_id': tag_ids
+                'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                'analytic_tag_ids': [(4, tag.id, 0) for tag in
+                                     line.book_assets_id.analytic_tag_ids] if line.book_assets_id.analytic_tag_ids else False
             }
             move_vals = {
                 'ref': line.asset_id.name,
@@ -1547,8 +1618,8 @@ class Depreciation(models.Model):
                 amount = (line.amount * assignment.percentage) / 100.00
                 # amount = current_currency.with_context(date=depreciation_date).compute(amount,company_currency)
                 depreciation_expense_account = assignment.depreciation_expense_account.id
-                for tag in assignment.depreciation_expense_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in assignment.depreciation_expense_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 move_line_2 = {
                     'name': asset_name,
                     'account_id': depreciation_expense_account,
@@ -1558,8 +1629,8 @@ class Depreciation(models.Model):
                     'partner_id': partner_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * line.amount or 0.0,
-                    'analytic_account_id': assignment.depreciation_expense_analytic_account_id.id if assignment.depreciation_expense_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': assignment.analytic_account_id.id if assignment.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in assignment.analytic_tag_ids]
                 }
                 move_vals['line_ids'].append((0, 0, move_line_2))
             move = self.env['account.move'].create(move_vals)
@@ -1648,9 +1719,10 @@ class Retirement(models.Model):
     def _retire_date_check(self):
         if self.retire_date > self.book_id.calendar_line_id.end_date or self.retire_date < self.book_id.calendar_line_id.start_date:
             raise ValidationError(
-                _("Retirement date must be in fiscal period from " + self.book_id.calendar_line_id.start_date + " to "
-                  + self.book_id.calendar_line_id.end_date +
-                  "\nchange the date in service or the fiscal period"))
+                _("Retirement date must be in fiscal period from " + str(
+                    self.book_id.calendar_line_id.start_date) + " to "
+                  + str(self.book_id.calendar_line_id.end_date) +
+                  "\n change the date in service or the fiscal period"))
 
     @api.onchange('book_id')
     def _asset_in_book(self):
@@ -1803,11 +1875,11 @@ class CategoryBooks(models.Model):
     accumulated_depreciation_account = fields.Many2one('account.account', on_delete='set_null', required=True,
                                                        domain=[('user_type_id', '=', 'Fixed Assets')],
                                                        track_visibility='onchange')
-    book_with_cate = fields.Boolean(related='book_id.book_with_cate')
+    #     book_with_cate = fields.Boolean(related='book_id.book_with_cate')
     group_entries = fields.Boolean(deafult=True, track_visibility='onchange')
     journal_id = fields.Many2one('account.journal', string='Journal', required=True, track_visibility='onchange')
     depreciation_method = fields.Selection([('linear', 'Linear'), ('degressive', 'Degressive')], default='linear',
-                                           track_visibility='onchange')
+                                           track_visibility='onchange', required=True)
     life_months = fields.Integer(required=True, track_visibility='onchange')
     method_time = fields.Selection([('number', 'Number of Entries'), ('end', 'Ending Date')], string='Time Method',
                                    required=True, default='number', track_visibility='onchange',
@@ -1820,23 +1892,10 @@ class CategoryBooks(models.Model):
     _sql_constraints = [
         ('unique_book_id_on_cat', 'UNIQUE(book_id,category_id)', 'Category is already added to this book')
     ]
-    asset_cost_analytic_account_id = fields.Many2one('account.analytic.account', string='Analytic Account',
-                                                     track_visibility='onchange')
-    asset_cost_analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic tags',
-                                                   track_visibility='onchange')
-    asset_clearing_analytic_account_id = fields.Many2one('account.analytic.account', string='Analytic Account',
-                                                         track_visibility='onchange')
-    asset_clearing_analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic tags',
-                                                       track_visibility='onchange')
-    depreciation_expense_analytic_account_id = fields.Many2one('account.analytic.account', string='Analytic Account',
-                                                               track_visibility='onchange')
-    depreciation_expense_analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic tags',
-                                                             track_visibility='onchange')
-    accumulated_depreciation_analytic_account_id = fields.Many2one('account.analytic.account',
-                                                                   string='Analytic Account',
-                                                                   track_visibility='onchange')
-    accumulated_depreciation_analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic tags',
-                                                                 track_visibility='onchange')
+    default_analytic_account_id = fields.Many2one('account.analytic.account', string='Default Analytic Account',
+                                                  track_visibility='onchange')
+    default_analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Default Analytic tags',
+                                                track_visibility='onchange')
 
     @api.model
     def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
@@ -1861,7 +1920,8 @@ class CategoryBooks(models.Model):
     @api.onchange('book_id')
     def onchange_book_id(self):
         if self.book_id:
-            self.book_with_cate = True
+            self.default_analytic_account_id = self.book_id.default_analytic_account_id
+            self.default_analytic_tag_ids = [(4, tag.id, 0) for tag in self.book_id.default_analytic_tag_ids]
             return {'domain': {'asset_cost_account': [('company_id', '=', self.book_id.company_id.id),
                                                       ('user_type_id', '=', 'Fixed Assets')],
                                'asset_clearing_account': [('company_id', '=', self.book_id.company_id.id),
@@ -1870,23 +1930,30 @@ class CategoryBooks(models.Model):
                                                                 ('user_type_id', '=', 'Depreciation')],
                                'accumulated_depreciation_account': [('company_id', '=', self.book_id.company_id.id),
                                                                     ('user_type_id', '=', 'Fixed Assets')],
-                               'asset_cost_analytic_account_id': [('company_id', '=', self.book_id.company_id.id)],
-                               'asset_clearing_analytic_account_id': [('company_id', '=', self.book_id.company_id.id)],
-                               'depreciation_expense_analytic_account_id': [
-                                   ('company_id', '=', self.book_id.company_id.id)],
-                               'accumulated_depreciation_analytic_account_id': [
-                                   ('company_id', '=', self.book_id.company_id.id)],
+                               'default_analytic_account_id': [('company_id', '=', self.book_id.company_id.id)],
                                'journal_id': [('company_id', '=', self.book_id.company_id.id)]
                                }}
 
     @api.multi
     def unlink(self):
         for record in self:
-            book_with_asset = record.env['asset_management.book_assets'].search([('book_id', '=', self.book_id.id)])[0]
+            book_with_asset = record.env['asset_management.book_assets'].search(
+                [('book_id', '=', record.book_id.id), ('category_id', '=', record.category_id.id)])
             if book_with_asset:
                 raise ValidationError(_(
                     'You can not delete a book contains assets'))
+        #             elif len(record.category_id.category_books_id) == 0:
+        #                 raise ValedationError(_("ddd"))
         return super(CategoryBooks, self).unlink()
+
+    @api.constrains('life_months', 'method_number')
+    def _required_field(self):
+        for record in self:
+            if record.life_months == 0:
+                raise ValidationError(_("On book : " + record.book_id.name + " Life Months must not be Zero"))
+            if record.method_number == 0:
+                raise ValidationError(
+                    _("On book : " + record.book_id.name + " Number of Depreciation moust not be Zero"))
 
 
 class Transaction(models.Model):
@@ -1920,6 +1987,8 @@ class Transaction(models.Model):
     cost = fields.Float('Current Value', track_visibility='onchange')
     old_cost = fields.Float('Old Current Value', track_visibility='onchange')
     retirement_id = fields.Many2one('asset_management.retirement', track_visibility='onchange')
+    old_assignment_id = fields.One2many('asset_management.transfer_history', 'old_transfer_id', on_delete='cascade')
+    new_assignment_id = fields.One2many('asset_management.transfer_history', 'new_transfer_id', on_delete='cascade')
 
     @api.model
     def fields_view_get(self, view_id=False, view_type='form', toolbar=False, submenu=False):
@@ -1958,7 +2027,7 @@ class Transaction(models.Model):
     def create_trx_move(self):
         prec = self.env['decimal.precision'].precision_get('Account')
         created_moves = self.env['account.move']
-        tag_ids = []
+        #         tag_ids = []
         for line in self:
             trx_name = line.name
             current_currency = line.asset_id.currency_id
@@ -1973,8 +2042,8 @@ class Transaction(models.Model):
                 journal_id = accounts.journal_id
                 asset_cost_account = accounts.asset_cost_account.id
                 asset_clearing_account = accounts.asset_clearing_account.id
-                for tag in accounts.asset_clearing_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in accounts.asset_clearing_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 # credit
                 move_line_1 = {
                     'name': trx_name,
@@ -1984,11 +2053,11 @@ class Transaction(models.Model):
                     'journal_id': journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * 50 or 0.0,
-                    'analytic_account_id': accounts.asset_clearing_analytic_account_id.id if accounts.asset_clearing_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                 }
-                for tag in accounts.asset_cost_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in accounts.asset_cost_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 # debit
                 move_line_2 = {
                     'name': trx_name,
@@ -1998,8 +2067,8 @@ class Transaction(models.Model):
                     'journal_id': journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * 50 or 0.0,
-                    'analytic_account_id': accounts.asset_cost_analytic_account_id.id if accounts.asset_cost_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                 }
 
                 move_vals = {
@@ -2030,8 +2099,8 @@ class Transaction(models.Model):
                 #     dep_value +=value.depreciated_value
 
                 # credit
-                for tag in old_accounts.asset_cost_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in old_accounts.asset_cost_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 move_line_1 = {
                     'name': trx_name,
                     'account_id': old_asset_cost_account,
@@ -2040,12 +2109,12 @@ class Transaction(models.Model):
                     'journal_id': journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * 50 or 0.0,
-                    'analytic_account_id': old_accounts.asset_cost_analytic_account_id.id if old_accounts.asset_cost_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                 }
                 # debit
-                for tag in new_accounts.asset_cost_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in new_accounts.asset_cost_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 move_line_2 = {
                     'name': trx_name,
                     'account_id': new_asset_cost_account,
@@ -2054,13 +2123,13 @@ class Transaction(models.Model):
                     'journal_id': journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * 50 or 0.0,
-                    'analytic_account_id': new_accounts.asset_cost_analytic_account_id.id if new_accounts.asset_cost_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                 }
 
                 # credit
-                for tag in new_accounts.accumulated_depreciation_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in new_accounts.accumulated_depreciation_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 move_line_3 = {
                     'name': trx_name,
                     'account_id': new_accumulated_depreciation_account,
@@ -2069,12 +2138,12 @@ class Transaction(models.Model):
                     'journal_id': journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * 50 or 0.0,
-                    'analytic_account_id': new_accounts.accumulated_depreciation_analytic_account_id.id if new_accounts.accumulated_depreciation_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                 }
                 # debit
-                for tag in old_accounts.accumulated_depreciation_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in old_accounts.accumulated_depreciation_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 move_line_4 = {
                     'name': trx_name,
                     'account_id': old_accumulated_depreciation_account,
@@ -2083,8 +2152,8 @@ class Transaction(models.Model):
                     'journal_id': journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * 50 or 0.0,
-                    'analytic_account_id': old_accounts.accumulated_depreciation_analytic_account_id.id if old_accounts.accumulated_depreciation_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                 }
 
                 move_vals = {
@@ -2105,8 +2174,8 @@ class Transaction(models.Model):
                 asset_cost_account = accounts.asset_cost_account.id
                 asset_clearing_account = accounts.asset_clearing_account.id
                 # credit
-                for tag in accounts.asset_clearing_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in accounts.asset_clearing_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 move_line_1 = {
                     'name': trx_name,
                     'account_id': asset_clearing_account,
@@ -2115,12 +2184,12 @@ class Transaction(models.Model):
                     'journal_id': journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * 50 or 0.0,
-                    'analytic_account_id': accounts.asset_clearing_analytic_account_id.id if accounts.asset_clearing_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                 }
                 # debit
-                for tag in accounts.asset_cost_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in accounts.asset_cost_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 move_line_2 = {
                     'name': trx_name,
                     'account_id': asset_cost_account,
@@ -2129,8 +2198,8 @@ class Transaction(models.Model):
                     'journal_id': journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * 50 or 0.0,
-                    'analytic_account_id': accounts.asset_cost_analytic_account_id.id if accounts.asset_cost_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                 }
 
                 move_vals = {
@@ -2152,7 +2221,7 @@ class Transaction(models.Model):
         asset_name = self.asset_id.name
         category_books = self.env['asset_management.category_books'].search([('book_id', '=', self.book_id.id), (
             'category_id', '=', self.category_id.id)])
-        tag_ids = []
+        #         tag_ids = []
         for trx in self:
             current_currency = trx.asset_id.currency_id
             company_currency = trx.book_id.company_id.currency_id
@@ -2170,8 +2239,8 @@ class Transaction(models.Model):
             if retirement.proceeds_of_sale or retirement.cost_of_removal:
                 asset_cost_account = category_books.asset_cost_account.id
                 accumulated_depreciation_account = category_books.accumulated_depreciation_account.id
-                for tag in category_books.asset_cost_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in category_books.asset_cost_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 move_line_1 = {
                     'name': asset_name,
                     'account_id': asset_cost_account,
@@ -2180,8 +2249,8 @@ class Transaction(models.Model):
                     'journal_id': category_books.journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * retirement.current_asset_cost or 0.0,
-                    'analytic_account_id': category_books.asset_cost_analytic_account_id.id if category_books.asset_cost_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                 }
                 move_vals = {
                     'ref': trx.asset_id.name,
@@ -2190,8 +2259,8 @@ class Transaction(models.Model):
                     'line_ids': [(0, 0, move_line_1)],
                 }
                 if accum_value:
-                    for tag in category_books.accumulated_depreciation_analytic_tag_ids:
-                        tag_ids.append((4, tag.id, 0))
+                    #                     for tag in category_books.accumulated_depreciation_analytic_tag_ids:
+                    #                         tag_ids.append((4, tag.id, 0))
                     move_line_2 = {
                         'name': asset_name,
                         'account_id': accumulated_depreciation_account,
@@ -2200,8 +2269,8 @@ class Transaction(models.Model):
                         'journal_id': category_books.journal_id.id,
                         'currency_id': company_currency != current_currency and current_currency.id or False,
                         'amount_currency': company_currency != current_currency and - 1.0 * accum_value or 0.0,
-                        'analytic_account_id': category_books.accumulated_depreciation_analytic_account_id.id if category_books.accumulated_depreciation_analytic_account_id else False,
-                        'analytic_tag_id': tag_ids
+                        'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                        'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                     }
                     move_vals['line_ids'].append([0, 0, move_line_2])
                     cr += move_line_2['credit']
@@ -2210,8 +2279,8 @@ class Transaction(models.Model):
                 db += move_line_1['debit']
 
                 if retirement.proceeds_of_sale:
-                    for tag in retirement.retirement_type_id.proceeds_of_sale_analytic_tag_ids:
-                        tag_ids.append((4, tag.id, 0))
+                    #                     for tag in retirement.retirement_type_id.proceeds_of_sale_analytic_tag_ids:
+                    #                         tag_ids.append((4, tag.id, 0))
                     proceeds_of_sale_account = retirement.retirement_type_id.proceeds_of_sale_account.id
                     move_line_3 = {
                         'name': asset_name,
@@ -2221,8 +2290,8 @@ class Transaction(models.Model):
                         'journal_id': category_books.journal_id.id,
                         'currency_id': company_currency != current_currency and current_currency.id or False,
                         'amount_currency': company_currency != current_currency and - 1.0 * retirement.proceeds_of_sale or 0.0,
-                        'analytic_account_id': retirement.retirement_type_id.proceeds_of_sale_analytic_account_id.id if retirement.retirement_type_id.proceeds_of_sale_analytic_account_id else False,
-                        'analytic_tag_id': tag_ids
+                        'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                        'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                     }
                     move_vals['line_ids'].append((0, 0, move_line_3))
                     cr += move_line_3['credit']
@@ -2230,8 +2299,8 @@ class Transaction(models.Model):
 
                 if retirement.cost_of_removal:
                     cost_of_removal_account = retirement.retirement_type_id.cost_of_removal_account.id
-                    for tag in retirement.retirement_type_id.cost_of_removal_analytic_tag_ids:
-                        tag_ids.append((4, tag.id, 0))
+                    #                     for tag in retirement.retirement_type_id.cost_of_removal_analytic_tag_ids:
+                    #                         tag_ids.append((4, tag.id, 0))
                     move_line_4 = {
                         'name': asset_name,
                         'account_id': cost_of_removal_account,
@@ -2240,8 +2309,8 @@ class Transaction(models.Model):
                         'journal_id': category_books.journal_id.id,
                         'currency_id': company_currency != current_currency and current_currency.id or False,
                         'amount_currency': company_currency != current_currency and - 1.0 * retirement.cost_of_removal or 0.0,
-                        'analytic_account_id': retirement.retirement_type_id.cost_of_removal_analytic_account_id.id if retirement.retirement_type_id.cost_of_removal_analytic_account_id else False,
-                        'analytic_tag_id': tag_ids
+                        'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                        'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                     }
                     move_vals['line_ids'].append((0, 0, move_line_4))
                     cr += move_line_4['credit']
@@ -2249,8 +2318,8 @@ class Transaction(models.Model):
 
                 if db > cr:
                     cost_of_removal_gain_account = retirement.book_id.cost_of_removal_gain_account.id
-                    for tag in retirement.book_id.gain_analytic_tag_ids:
-                        tag_ids.append((4, tag.id, 0))
+                    #                     for tag in retirement.book_id.gain_analytic_tag_ids:
+                    #                         tag_ids.append((4, tag.id, 0))
                     move_line_5 = {
                         'name': asset_name,
                         'account_id': cost_of_removal_gain_account,
@@ -2259,14 +2328,14 @@ class Transaction(models.Model):
                         'journal_id': category_books.journal_id.id,
                         'currency_id': company_currency != current_currency and current_currency.id or False,
                         'amount_currency': company_currency != current_currency and - 1.0 * db - cr or 0.0,
-                        'analytic_account_id': retirement.book_id.gain_analytic_account_id.id if retirement.book_id.gain_analytic_account_id else False,
-                        'analytic_tag_id': tag_ids
+                        'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                        'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                     }
                     move_vals['line_ids'].append((0, 0, move_line_5))
                 elif db < cr:
                     cost_of_removal_loss_account = retirement.book_id.cost_of_removal_loss_account.id
-                    for tag in retirement.book_id.loss_analytic_tag_ids:
-                        tag_ids.append((4, tag.id, 0))
+                    #                     for tag in retirement.book_id.loss_analytic_tag_ids:
+                    #                         tag_ids.append((4, tag.id, 0))
                     move_line_5 = {
                         'name': asset_name,
                         'account_id': cost_of_removal_loss_account,
@@ -2275,14 +2344,14 @@ class Transaction(models.Model):
                         'journal_id': category_books.journal_id.id,
                         'currency_id': company_currency != current_currency and current_currency.id or False,
                         'amount_currency': company_currency != current_currency and - 1.0 * db - cr or 0.0,
-                        'analytic_account_id': retirement.book_id.loss_analytic_account_id.id if retirement.book_id.loss_analytic_account_id else False,
-                        'analytic_tag_id': tag_ids
+                        'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                        'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                     }
                     move_vals['line_ids'].append((0, 0, move_line_5))
                 # move1 = trx.env['account.move'].create(move_vals1)
             elif self.trx_type == 'partial_retirement' and retirement.retired_cost <= accum_value:
-                for tag in category_books.asset_cost_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in category_books.asset_cost_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 asset_cost_account = category_books.asset_cost_account.id
                 accumulated_depreciation_account = category_books.accumulated_depreciation_account.id
                 # credit
@@ -2296,13 +2365,13 @@ class Transaction(models.Model):
                     'journal_id': category_books.journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * retirement.retired_cost or 0.0,
-                    'analytic_account_id': category_books.asset_cost_analytic_account_id.id if category_books.asset_cost_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                 }
 
                 # debit
-                for tag in category_books.accumulated_depreciation_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in category_books.accumulated_depreciation_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 move_line_2 = {
                     'name': asset_name,
                     'account_id': accumulated_depreciation_account,
@@ -2313,8 +2382,8 @@ class Transaction(models.Model):
                     'journal_id': category_books.journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * retirement.retired_cost or 0.0,
-                    'analytic_account_id': category_books.accumulated_depreciation_analytic_account_id.id if category_books.accumulated_depreciation_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                 }
                 move_vals = {
                     'ref': trx.asset_id.name,
@@ -2323,8 +2392,8 @@ class Transaction(models.Model):
                     'line_ids': [(0, 0, move_line_1), (0, 0, move_line_2)],
                 }
             else:
-                for tag in category_books.asset_cost_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in category_books.asset_cost_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 asset_cost_account = category_books.asset_cost_account.id
                 accumulated_depreciation_account = category_books.accumulated_depreciation_account.id
                 cost_of_removal_loss_account = trx.book_id.cost_of_removal_loss_account.id
@@ -2339,13 +2408,13 @@ class Transaction(models.Model):
                     'journal_id': category_books.journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * retirement.retired_cost or 0.0,
-                    'analytic_account_id': category_books.asset_cost_analytic_account_id.id if category_books.asset_cost_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                 }
                 # debit
                 debit_amount = retirement.retired_cost - accum_value
-                for tag in trx.book_id.loss_analytic_tag_ids:
-                    tag_ids.append((4, tag.id, 0))
+                #                 for tag in trx.book_id.loss_analytic_tag_ids:
+                #                     tag_ids.append((4, tag.id, 0))
                 move_line_3 = {
                     'name': asset_name,
                     'account_id': cost_of_removal_loss_account,
@@ -2356,8 +2425,8 @@ class Transaction(models.Model):
                     'journal_id': category_books.journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * debit_amount or 0.0,
-                    'analytic_account_id': trx.book_id.loss_analytic_account_id.id if trx.book_id.loss_analytic_account_id else False,
-                    'analytic_tag_id': tag_ids
+                    'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                    'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                 }
 
                 move_vals = {
@@ -2368,8 +2437,8 @@ class Transaction(models.Model):
                 }
                 # debit
                 if accum_value:
-                    for tag in category_books.accumulated_depreciation_analytic_tag_ids:
-                        tag_ids.append((4, tag.id, 0))
+                    #                     for tag in category_books.accumulated_depreciation_analytic_tag_ids:
+                    #                         tag_ids.append((4, tag.id, 0))
                     move_line_2 = {
                         'name': asset_name,
                         'account_id': accumulated_depreciation_account,
@@ -2380,8 +2449,8 @@ class Transaction(models.Model):
                         'journal_id': category_books.journal_id.id,
                         'currency_id': company_currency != current_currency and current_currency.id or False,
                         'amount_currency': company_currency != current_currency and - 1.0 * accum_value or 0.0,
-                        'analytic_account_id': category_books.accumulated_depreciation_analytic_account_id.id if category_books.accumulated_depreciation_analytic_account_id else False,
-                        'analytic_tag_id': tag_ids
+                        'analytic_account_id': line.book_assets_id.analytic_account_id.id if line.book_assets_id.analytic_account_id else False,
+                        'analytic_tag_ids': [(4, tag.id, 0) for tag in line.book_assets_id.analytic_tag_ids]
                     }
                     move_vals['line_ids'].append((0, 0, move_line_2))
             move = trx.env['account.move'].create(move_vals)
@@ -2515,8 +2584,8 @@ class DepRunProcess(models.Model):
     name = fields.Char('Run Deprecation process Number', track_visibility='always')
     process_date = fields.Date(readonly=True)
     process_period_id = fields.Many2one('asset_management.calendar_line', on_delete="cascade",
-                                        track_visibility='onchange',readonly=True)
-    book_id = fields.Many2one('asset_management.book', on_delete="cascade", track_visibility='onchange',readonly=True)
+                                        track_visibility='onchange', readonly=True)
+    book_id = fields.Many2one('asset_management.book', on_delete="cascade", track_visibility='onchange', readonly=True)
     dep_run_process_lines = fields.One2many('asset_management.deprunprocess_line', 'dep_run_process_id')
     reinstall_flag = fields.Boolean()
     dep_on2many_view = fields.Boolean(default=True)
@@ -2530,8 +2599,8 @@ class DepRunProcess(models.Model):
 
     @api.multi
     def reinstall(self):
-        if self.reinstall_flag or self.end_of_period :
-            raise ValidationError (_("You Can't reinstall this process"))
+        if self.reinstall_flag or self.end_of_period:
+            raise ValidationError(_("You Can't reinstall this process"))
         dep_line = self.env['asset_management.depreciation'].search([('dep_run_process_id', '=', self.id)])
         date = datetime.today()
         reserved_jl_list = []
@@ -2564,11 +2633,10 @@ class DepRunProcess(models.Model):
             raise ValidationError(_('Depreciation Run Process can not be deleted '))
         super(DepRunProcess, self).unlink()
 
-
-    @api.depends('book_id','process_period_id')
+    @api.depends('book_id', 'process_period_id')
     def _end_of_the_period(self):
         for record in self:
-            if record.book_id.calendar_line_id.id != record.process_period_id.id :
+            if record.book_id.calendar_line_id.id != record.process_period_id.id:
                 record.end_of_period = True
 
 
@@ -2601,3 +2669,12 @@ class DepRunProcessLine(models.Model):
                 node.set('widget', "")
             res['arch'] = etree.tostring(doc, encoding='unicode')
         return res
+
+
+class TransferHistory(models.Model):
+    _name = 'asset_management.transfer_history'
+    name = fields.Char()
+    assignment_id = fields.Many2one('hr.employee')
+    location_id = fields.Many2one('asset_management.location')
+    old_transfer_id = fields.Many2one('asset_management.transaction')
+    new_transfer_id = fields.Many2one('asset_management.transaction')

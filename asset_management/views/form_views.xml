@@ -6,7 +6,7 @@
         <field name="name">retirement form</field>
         <field name="model">asset_management.retirement</field>
         <field name="arch" type="xml">
-            <form string="Retirement Form" edit="false">
+            <form string="Retirement Form" edit="false" duplicate = "false">
                 <header>
 
                     <button name="reinstall" string="Reinstall" type="object" class="oe_highlight" attrs="{'invisible':['|',('id','=',False),
@@ -61,7 +61,7 @@
         <field name="name">category_books.form</field>
         <field name="model">asset_management.category_books</field>
         <field name="arch" type="xml">
-            <form string="Category Books Form">
+            <form string="Category Books Form" create ="false" >
                 <sheet>
                     <group>
 
@@ -71,7 +71,7 @@
                             <field name="book_id"/>
                             <field name="journal_id"/>
                             <field name="group_entries"/>
-                            <field name="book_with_cate" invisible="1"/>
+<!--                             <field name="book_with_cate" invisible="1"/> -->
                         </group>
 
                         <group>
@@ -83,49 +83,22 @@
                         </group>
                         <group>
                             <field name="asset_cost_account" attrs="{'readonly':[('book_id','=',False)]}"/>
-                            <field name="asset_clearing_account" attrs="{'readonly':[('book_id','=',False)]}"/>
                             <field name="depreciation_expense_account"
                                    attrs="{'readonly':[('book_id','=',False)]}"/>
-                            <field name="accumulated_depreciation_account"
-                                   attrs="{'readonly':[('book_id','=',False)]}"/>
+                            <field name="default_analytic_account_id"
+                                   attrs="{'readonly':[('book_id','=',False)]}"
+                                   groups="analytic.group_analytic_accounting"
+                               />
+
                         </group>
                         <group>
-
-                            <field name="asset_cost_analytic_account_id"
-                                   attrs="{'readonly':[('asset_cost_account','=',False)]}"
-                                   groups="analytic.group_analytic_accounting"
-                                   placeholder="asset cost analytic account"/>
-                            <field name="asset_cost_analytic_tag_ids"
-                                   attrs="{'readonly':[('asset_cost_account','=',False)]}"
+                            <field name="asset_clearing_account" attrs="{'readonly':[('book_id','=',False)]}"/>
+                            <field name="accumulated_depreciation_account"
+                                   attrs="{'readonly':[('book_id','=',False)]}"/>
+                            <field name="default_analytic_tag_ids"
+                                   attrs="{'readonly':[('book_id','=',False)]}"
                                    groups="analytic.group_analytic_accounting" widget="many2many_tags"
-                                   placeholder="asset cost analytic tag"/>
-
-                            <field name="asset_clearing_analytic_account_id"
-                                   attrs="{'readonly':[('asset_clearing_account','=',False)]}"
-                                   groups="analytic.group_analytic_accounting"
-                                   placeholder="asset clearing analytic account"/>
-                            <field name="asset_clearing_analytic_tag_ids"
-                                   attrs="{'readonly':[('asset_clearing_account','=',False)]}"
-                                   groups="analytic.group_analytic_accounting" widget="many2many_tags"
-                                   placeholder="asset clearing analytic tag"/>
-
-                            <field name="depreciation_expense_analytic_account_id"
-                                   attrs="{'readonly':[('depreciation_expense_account','=',False)]}"
-                                   groups="analytic.group_analytic_accounting"
-                                   placeholder="depreciation expense analytic account"/>
-                            <field name="depreciation_expense_analytic_tag_ids"
-                                   attrs="{'readonly':[('depreciation_expense_account','=',False)]}"
-                                   groups="analytic.group_analytic_accounting" widget="many2many_tags"
-                                   placeholder="depreciation expense analytic tag"/>
-
-                            <field name="accumulated_depreciation_analytic_account_id"
-                                   attrs="{'readonly':[('accumulated_depreciation_account','=',False)]}"
-                                   groups="analytic.group_analytic_accounting"
-                                   placeholder="accumulated depreciation analytic account"/>
-                            <field name="accumulated_depreciation_analytic_tag_ids"
-                                   attrs="{'readonly':[('accumulated_depreciation_account','=',False)]}"
-                                   groups="analytic.group_analytic_accounting" widget="many2many_tags"
-                                   placeholder="accumulated depreciation analytic tag"/>
+                                   />
                         </group>
                     </group>
                 </sheet>
@@ -206,9 +179,23 @@
                             <field name="cost"/>
                             <field name="old_cost" attrs="{'invisible':[('old_cost','=',0.0)]}"/>
                             <field name="retirement_id" attrs="{'invisible':[('retirement_id','=',False)]}"/>
-                            <field name="trx_details"/>
+                            <field name="trx_details"  attrs="{'invisible':[('trx_type','=','transfer')]}"/>
                         </group>
                     </group>
+                    <field name="new_assignment_id" widget="One2many_list"
+                                   attrs="{'invisible':[('trx_type','!=','transfer')]}" >
+                                <tree string="New Assignment">
+                                    <field name="location_id" string="New Location"/>
+                                    <field name="assignment_id"  string="New Assignment"/>
+                                </tree>
+                            </field>
+                    <field name="old_assignment_id" widget="One2many_list"
+                                   attrs="{'invisible':[('trx_type','!=','transfer')]}">
+                                <tree string="Old Assignment">
+                                    <field name="location_id"  string="Old Location"/>
+                                    <field name="assignment_id"  string="Old Assignment"/>
+                                </tree>
+                            </field>
                 </sheet>
                 <div class="oe_chatter">
                     <field name="message_follower_ids" widget="mail_followers"/>
@@ -231,13 +218,12 @@
                             <field name="asset_id"/>
                             <field name="book_id"/>
                             <field name="depreciation_expense_account"/>
-                            <field name="depreciation_expense_analytic_account_id"
+                            <field name="analytic_account_id"
                                    groups="analytic.group_analytic_accounting"
-                                   placeholder="depreciation expense analytic account"
+
                                    attrs="{'readonly':[('history_flag','=',True)]}"/>
-                            <field name="depreciation_expense_analytic_tag_ids"
+                            <field name="analytic_tag_ids"
                                    groups="analytic.group_analytic_accounting" widget="many2many_tags"
-                                   placeholder="depreciation expense analytic tag"
                                     attrs="{'readonly':[('history_flag','=',True)]}"/>
 
                         </group>
@@ -268,28 +254,28 @@
         <field name="name">source_line.form</field>
         <field name="model">asset_management.source_line</field>
         <field name="arch" type="xml">
-            <form string="Source Line Form" create="false">
+            <form string="Source Line Form" create="false" edite="false" delete="false">
                 <sheet>
                     <group>
                         <group>
-                            <field name="book_assets_id" invisible="1"/>
-                            <field name="asset_id"/>
-                            <field name="book_id"/>
-                            <field name="source_type"/>
+                            <field name="book_assets_id" invisible="1" />
+                            <field name="asset_id" readonly ="1"/>
+                            <field name="book_id" attrs="{'readonly':[('id','!=',False)]}"/>
+                            <field name="source_type" attrs="{'readonly':[('id','!=',False)]}"/>
                         </group>
                         <group>
                             <field name="invoice_id"
-                                   attrs="{'required':[('source_type','=','invoice')],'invisible':[('source_type','=','miscellaneous')]}"/>
+                                   attrs="{'required':[('source_type','=','invoice')],'invisible':[('source_type','=','miscellaneous')],'readonly':[('id','!=',False)]}"/>
                             <field name="invoice_line_ids" attrs="{'required':[('source_type','=','invoice')],'invisible':[('source_type','=','miscellaneous')]
-                                        ,'readonly':[('invoice_id','=',False)]}"/>
+                                        ,'readonly':['|',('invoice_id','=',False),('id','!=',False)]}"/>
                             <field name="amount"
                                    attrs="{'required':[('source_type','=','invoice')],'invisible':[('source_type','=','miscellaneous')]}"/>
-                            <field name="invoice_id_m_type" attrs="{'invisible':[('source_type','=','invoice')]}"/>
+                            <field name="invoice_id_m_type" attrs="{'invisible':[('source_type','=','invoice')],'readonly':[('id','!=',False)]}"/>
                             <field name="invoice_line_ids_m_type"
-                                   attrs="{'invisible':[('source_type','=','invoice')]}"/>
+                                   attrs="{'invisible':[('source_type','=','invoice')],'readonly':[('id','!=',False)]}"/>
                             <field name="amount_m_type"
-                                   attrs="{'required':[('source_type','=','miscellaneous')],'invisible':[('source_type','=','invoice')]}"/>
-                            <field name="description"/>
+                                   attrs="{'required':[('source_type','=','miscellaneous')],'invisible':[('source_type','=','invoice')],'readonly':[('id','!=',False)]}"/>
+                            <field name="description" attrs="{'readonly':[('id','!=',False)]}"/>
                         </group>
                     </group>
                 </sheet>
@@ -332,7 +318,8 @@
                             attrs="{'invisible':['|','|',('depreciation_computation','=',False),('state','!=','draft'),('id','=',False)]}"/>
                     <button string="Set to Retire" type="action" name="%(set_asset_to_retire)d" class="oe_highlight"
                             attrs="{'invisible':[('state','=','draft')]}"/>
-
+                    <button name="delete_source" string="test" type="object"
+                           />
                     <field name="state" widget="statusbar" statusbar_visible="draft,open"/>
                 </header>
 
@@ -364,6 +351,8 @@
                             <field name="salvage_value_amount"/>
                             <field name="residual_value"/>
                             <field name="depreciation_computation" invisible="1"/>
+                            <field name="analytic_account_id" groups="analytic.group_analytic_accounting"/>
+                            <field name="analytic_tag_ids" groups="analytic.group_analytic_accounting" widget="many2many_tags"/>
                             <field name="create_date" widget="date" readonly="1"/>
                         </group>
 
@@ -398,8 +387,9 @@
                     <notebook>
                         <page name="assignment" string="Assignment">
                             <field name="assignment_id" widget="section_and_note_one2many"
-                                   context="{'default_book_assets_id':id,'form_view_ref':'asset_management.assignment_form_one2many_view',
-                                   'book_one2many_view':book_one2many_view}"
+                                   context="{'default_book_assets_id':id,'form_view_ref':'asset_management.assignment_form_view',
+                                   'book_one2many_view':book_one2many_view,
+                                            'default_analytic_account_id':analytic_account_id, 'default_analytic_tag_ids':analytic_tag_ids}"
                                    attrs="{'readonly':[('state','=','close')]}">
                                 <tree string="Assignment">
                                     <field name="responsible_id"/>
@@ -414,7 +404,7 @@
 
                         <page name="source line" string="Source Line">
                             <field name="source_line_ids" widget="section_and_note_one2many"
-                                   context="{'form_view_ref':'asset_management.source_line_one2many_form_view','book_one2many_view':book_one2many_view}"
+                                   context="{'form_view_ref':'asset_management.source_line_form_view','book_one2many_view':book_one2many_view}"
                                    attrs="{'readonly':[('state','=','close')]}">
                                 <tree string="Source Line">
                                     <field name="source_type"/>
@@ -426,7 +416,7 @@
 
                         <page name="depreciation" string="Depreciation">
                             <field name="depreciation_line_ids" widget="One2many_list" readonly="1"
-                                   context="{'form_view_ref':'asset_management.depreciation_form_one2many_view','book_one2many_view':book_one2many_view}">
+                                   context="{'form_view_ref':'asset_management.depreciation_form_view','book_one2many_view':book_one2many_view}">
                                 <tree string="Depreciation" create="false" edit="false" delete="false">
                                     <field name="depreciation_date"/>
                                     <field name="depreciated_value"/>
@@ -442,7 +432,7 @@
 
                         <page string="Transactions" name="transactions">
                             <field name="transaction_id" widget="One2many_list" readonly="1"
-                                   context="{'form_view_ref':'asset_management.transaction_form_one2many_view','book_one2many_view':book_one2many_view}">
+                                   context="{'form_view_ref':'asset_management.transaction_form_view','book_one2many_view':book_one2many_view}">
                                 <tree name="Transaction" create="false" edit="false" delete="false">
                                     <field name="trx_type"/>
                                     <field name="trx_date"/>
@@ -466,7 +456,7 @@
         <field name="name">asset.form</field>
         <field name="model">asset_management.asset</field>
         <field name="arch" type="xml">
-            <form string="Asset Form">
+            <form string="Asset Form" duplicate = "false">
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button class="oe_stat_button" name="open_asset_entries" type="object" icon="fa-pencil">
@@ -485,7 +475,7 @@
                             <field name="category_id" attrs="{'invisible':[('category_invisible','=',True)]}"/>
                             <field name="parent_asset"/>
                             <field name="asset_type" attrs="{'readonly':[('id','!=',False)]}"/>
-                            <field name="asset_with_category" invisible="1"/>
+<!--                             <field name="asset_with_category" invisible="1"/> -->
                             <field name="category_invisible" invisible="1"/>
                             <field name="currency_id" invisible="1"/>
                             <field name="asset_with_one2many" invisible="1"/>
@@ -531,7 +521,7 @@
                         </page>
 
                         <page name="depreciation" string="Depreciation">
-                            <field name="depreciation_line_ids" widget="One2many_list" mode="tree,form" readonly="1"
+                            <field name="depreciation_line_ids" widget="One2many_list"  readonly="1"
                                    context="{'form_view_ref':'asset_management.depreciation_form_view','asset_with_one2many':asset_with_one2many}">
                                 <tree string="Depreciation" create="false" edit="false" delete="false">
                                     <field name="book_id"/>
@@ -652,30 +642,23 @@
                             <field name="company_id" attrs="{'readonly':[('book_with_cate','=',True)]}"/>
                             <field name="currency_id" invisible="1"
                                    attrs="{'readonly':[('book_with_cate','=',True)]}"/>
-                            <field name="calendar_id" attrs="{'readonly':[('id','!=',False)]}"/>
+                            <field name="calendar_id" attrs="{'readonly':[('book_with_asset','=',True)]}"/>
                             <field name="calendar_line_id"
-                                   attrs="{'readonly':['|',('id','!=',False),('calendar_id','=',False)]}"/>
+                                   attrs="{'readonly':['|',('book_with_asset','=',True),('calendar_id','=',False)]}"/>
                             <field name="fiscal_year"/>
                         </group>
                         <group>
                             <field name="allow_future_transaction"/>
                             <field name="cost_of_removal_gain_account"
                                    attrs="{'readonly':[('company_id','=',False)]}"/>
-                            <field name="gain_analytic_account_id" attrs="{'readonly':[('company_id','=',False)]}"
-                                   groups="analytic.group_analytic_accounting"
-                                   placeholder="cost of removal gain analytic account"/>
-                            <field name="gain_analytic_tag_ids" attrs="{'readonly':[('company_id','=',False)]}"
-                                   groups="analytic.group_analytic_accounting" widget="many2many_tags"
-                                   placeholder="cost of removal gain analytic tag"/>
                             <field name="cost_of_removal_loss_account"
                                    attrs="{'readonly':[('company_id','=',False)]}"/>
-                            <field name="loss_analytic_account_id" attrs="{'readonly':[('company_id','=',False)]}"
-                                   groups="analytic.group_analytic_accounting"
-                                   placeholder="cost of removal loss analytic account"/>
-                            <field name="loss_analytic_tag_ids" attrs="{'readonly':[('company_id','=',False)]}"
-                                   groups="analytic.group_analytic_accounting" widget="many2many_tags"
-                                   placeholder="cost of removal loss analytic tag"/>
+                            <field name="default_analytic_account_id" attrs="{'readonly':[('company_id','=',False)]}"
+                                   groups="analytic.group_analytic_accounting"/>
+                            <field name="default_analytic_tag_ids" attrs="{'readonly':[('company_id','=',False)]}"
+                                   groups="analytic.group_analytic_accounting" widget="many2many_tags"/>
                             <field name="book_with_cate" invisible="1"/>
+                            <field name = "book_with_asset" invisible = "1"/>
                         </group>
                     </group>
 
@@ -710,8 +693,11 @@
                     <group>
                         <label for="name" string="Address"/>
                         <div class="oe_address_format">
-                            <field name="name" placeholder="Street" class="oe_address_street"/>
-                            <field name="city" placeholder="City" class="oe_address_city"/>
+                            <field name="name" placeholder="Street" />
+                            <div>
+                                <field name="city" placeholder="City"/>
+                            </div>
+
                             <field name="state_id" placeholder="State" context="{'country_id': country_id}"
                                    class="oe_address_state"/>
                             <field name="country_id" placeholder="Country" class="oe_address_country"
@@ -850,7 +836,7 @@
         <field name="arch" type="xml">
             <form string="Depreciation Run Process Form" create="false" edit="false">
                 <header>
-                    <button name="reinstall" string="Reinstall" type="object" class="oe_highlight" attrs="{'invisible':['|','|',('id','=',False),
+                    <button name="reinstall" string="Reverse" type="object" class="oe_highlight" attrs="{'invisible':['|','|',('id','=',False),
                                                             ('reinstall_flag','=',True),('end_of_period','=',True)]}"/>
                 </header>
                 <sheet>
