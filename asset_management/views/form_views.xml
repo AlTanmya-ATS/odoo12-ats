@@ -9,8 +9,8 @@
             <form string="Retirement Form" edit="false" duplicate = "false">
                 <header>
 
-                    <button name="reinstall" string="Reinstall" type="object" class="oe_highlight" attrs="{'invisible':['|',('id','=',False),
-                                                            ('state','=','reinstall')]}"/>
+                    <button name="reinstall" string="Reinstall" type="object" class="oe_highlight" attrs="{'invisible':['|','|',('id','=',False),
+                                                            ('state','!=','complete'),('jl_is_posted','=',False)]}"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,complete"/>
                 </header>
                 <sheet>
@@ -37,6 +37,7 @@
                             <field name="partner_id" attrs="{'readonly':[('id','!=',False)]}"/>
                             <field name="cost_of_removal" attrs="{'readonly':[('id','!=',False)]}"/>
                             <field name="accumulated_value" invisible="1" force_save="1"/>
+                            <field name ="jl_is_posted" invisible = "1"/>
 
                         </group>
                     </group>
@@ -254,7 +255,7 @@
         <field name="name">source_line.form</field>
         <field name="model">asset_management.source_line</field>
         <field name="arch" type="xml">
-            <form string="Source Line Form" create="false" edite="false" delete="false">
+            <form string="Source Line Form" create="false" edit="false" delete="false">
                 <sheet>
                     <group>
                         <group>
@@ -262,6 +263,7 @@
                             <field name="asset_id" readonly ="1"/>
                             <field name="book_id" attrs="{'readonly':[('id','!=',False)]}"/>
                             <field name="source_type" attrs="{'readonly':[('id','!=',False)]}"/>
+                            <field name="added_to_asset_cost" invisible="1"/>
                         </group>
                         <group>
                             <field name="invoice_id"
@@ -294,7 +296,8 @@
         <field name="view_mode">form</field>
         <field name="view_id" ref="retirement_form_view"/>
         <field name="target">current</field>
-        <field name="context">{'default_asset_id':active_id}</field>
+        <field name="context">{'default_asset_id':context.get('asset_id'),
+            'default_book_id':context.get('book_id')}</field>
     </record>
 
 
@@ -303,7 +306,7 @@
         <field name="name">book_assets form</field>
         <field name="model">asset_management.book_assets</field>
         <field name="arch" type="xml">
-            <form string="Book Asset Form" create="false">
+            <form string="Book Asset Form" create="false" delete="false">
                 <header>
 
                     <button name="%(asset_dep_modify_action)d" string="Modify Depreciation" type="action"
@@ -316,10 +319,10 @@
                     <button name="compute_depreciation_board" string="Compute Depreciation" type="object"
                             class="oe_highlight"
                             attrs="{'invisible':['|','|',('depreciation_computation','=',False),('state','!=','draft'),('id','=',False)]}"/>
-                    <button string="Set to Retire" type="action" name="%(set_asset_to_retire)d" class="oe_highlight"
-                            attrs="{'invisible':[('state','=','draft')]}"/>
-                    <button name="delete_source" string="test" type="object"
-                           />
+                    <button string="Set to Retire" type="action" name="%(set_asset_to_retire)d" class="oe_highlight" context="{'book_id':book_id ,'asset_id':asset_id}"
+                            attrs="{'invisible':[('state','!=','open')]}"/>
+                    <button name="add_source" string="add source line" type="object"
+                          attrs="{'invivsible':[('id','=',False)]}"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,open"/>
                 </header>
 
@@ -351,8 +354,6 @@
                             <field name="salvage_value_amount"/>
                             <field name="residual_value"/>
                             <field name="depreciation_computation" invisible="1"/>
-                            <field name="analytic_account_id" groups="analytic.group_analytic_accounting"/>
-                            <field name="analytic_tag_ids" groups="analytic.group_analytic_accounting" widget="many2many_tags"/>
                             <field name="create_date" widget="date" readonly="1"/>
                         </group>
 
@@ -381,6 +382,8 @@
                             <field name="assign_change_flag" invisible="1"/>
                             <field name="percentage" invisible="1"/>
                             <field name="book_one2many_view" invisible="1"/>
+                            <field name="analytic_account_id" groups="analytic.group_analytic_accounting"/>
+                            <field name="analytic_tag_ids" groups="analytic.group_analytic_accounting" widget="many2many_tags"/>
                         </group>
                     </group>
 
@@ -405,11 +408,12 @@
                         <page name="source line" string="Source Line">
                             <field name="source_line_ids" widget="section_and_note_one2many"
                                    context="{'form_view_ref':'asset_management.source_line_form_view','book_one2many_view':book_one2many_view}"
-                                   attrs="{'readonly':[('state','=','close')]}">
-                                <tree string="Source Line">
+                                   attrs="{'readonly':['|',('state','=','close'),('id','!=',False)]}">
+                                <tree string="Source Line" edit="false" delete="false">
                                     <field name="source_type"/>
                                     <field name="description"/>
-
+                                    <field name = "amount" attrs="{'invisible':[('source_type','!=','invoice')]}"/>
+                                    <field name = "amount_m_type" attrs="{'invisible':[('source_type','!=','miscellaneous')]}"/>
                                 </tree>
                             </field>
                         </page>
@@ -521,10 +525,9 @@
                         </page>
 
                         <page name="depreciation" string="Depreciation">
-                            <field name="depreciation_line_ids" widget="One2many_list"  readonly="1"
+                            <field name="depreciation_line_ids" widget="One2many_list" readonly="1"
                                    context="{'form_view_ref':'asset_management.depreciation_form_view','asset_with_one2many':asset_with_one2many}">
                                 <tree string="Depreciation" create="false" edit="false" delete="false">
-                                    <field name="book_id"/>
                                     <field name="depreciation_date"/>
                                     <field name="depreciated_value"/>
                                     <field name="amount"/>
@@ -836,8 +839,8 @@
         <field name="arch" type="xml">
             <form string="Depreciation Run Process Form" create="false" edit="false">
                 <header>
-                    <button name="reinstall" string="Reverse" type="object" class="oe_highlight" attrs="{'invisible':['|','|',('id','=',False),
-                                                            ('reinstall_flag','=',True),('end_of_period','=',True)]}"/>
+                    <button name="reverse" string="Reverse" type="object" class="oe_highlight" attrs="{'invisible':['|','|',('id','=',False),
+                                                            ('reverse_flag','=',True),('end_of_period','=',True)]}"/>
                 </header>
                 <sheet>
                     <group>
@@ -848,7 +851,7 @@
                         <group>
                             <field name="process_period_id"/>
                             <field name="book_id"/>
-                            <field name="reinstall_flag" invisible="1" force_save="1"/>
+                            <field name="reverse_flag" invisible="1" force_save="1"/>
                             <field name="dep_on2many_view" invisible="1"/>
                             <field name="end_of_period" invisible="1"/>
                         </group>
@@ -860,7 +863,11 @@
                                    context="{'form_view_ref':'asset_management.dep_run_process_line_form_view','dep_on2many_view':dep_on2many_view}">
                                 <tree string="depreciation line" edit="false" create="false" delete="false">
                                     <field name="sequence"/>
+                                    <field name = "asset_id"/>
                                     <field name="depreciation_id"/>
+                                    <field name = "move_id"/>
+                                    <field name ="move_check"/>
+                                    <field name="move_posted_check"/>
                                 </tree>
                             </field>
                         </page>
@@ -885,10 +892,14 @@
                     <group>
                         <group>
                             <field name="sequence"/>
+                            <field name="dep_run_process_id"/>
                         </group>
                         <group>
-                            <field name="dep_run_process_id"/>
                             <field name="depreciation_id"/>
+                            <field name = "asset_id"/>
+                            <field name = "move_id"/>
+                            <field name ="move_check"/>
+                            <field name="move_posted_check"/>
                         </group>
                     </group>
                 </sheet>

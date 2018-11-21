@@ -7,11 +7,8 @@
             <form string="Warning">
                 <sheet>
                     <group>
-                        <field name="text"/>
-                        <field name='slist'/>
-
+                        <field name="text" readonly ="1" nolabel="1"/>
                     </group>
-
                 </sheet>
                 <footer>
                     <button name='confirm' string='Yes' class='btn-primary' type='object'/>

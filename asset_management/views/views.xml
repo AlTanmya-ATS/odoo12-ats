@@ -9,11 +9,10 @@
             <field name="arch" type="xml">
                 <tree string="Retirement Tree">
                     <field name="name"/>
-                    <field name="asset_id"/>
+                    <field name = "asset_id"/>
                     <field name="book_id"/>
                     <field name="retire_date"/>
-                    <field name="retired_cost"/>
-                    <field name="state"/>
+                    <field name = "state"/>
                 </tree>
             </field>
         </record>
@@ -184,6 +183,7 @@
                     <field name="residual_value"/>
                     <field name="original_cost"/>
                     <field name="method"/>
+                    <field name="state"/>
                 </tree>
             </field>
         </record>
@@ -224,8 +224,7 @@
             <field name="model">asset_management.assignment</field>
             <field name="arch" type="xml">
                 <tree string="Assignment Tree" create="false" edit="false">
-                    <field name="asset_id"/>
-                    <field name="book_id"/>
+                    <field name="name"/>
                     <field name="location_id"/>
                     <field name="responsible_id"/>
                     <field name="percentage"/>
@@ -270,9 +269,9 @@
             <field name="model">asset_management.source_line</field>
             <field name="arch" type="xml">
                 <tree string="Source Line Tree" edit="false" create="false">
-                    <field name="asset_id"/>
-                    <field name="book_id"/>
+                    <field name="name"/>
                     <field name="source_type"/>
+                    <field name="invoice_id"/>
                 </tree>
             </field>
         </record>
@@ -312,10 +311,9 @@
             <field name="arch" type="xml">
                 <tree string="Transaction Tree" create="false" edit="false">
                     <field name="name"/>
-                    <field name="book_id"/>
                     <field name="asset_id"/>
+                    <field name="book_id"/>
                     <field name="trx_type"/>
-                    <field name="trx_date"/>
                 </tree>
             </field>
         </record>
@@ -357,9 +355,7 @@
                     <field name="name"/>
                     <field name="book_id"/>
                     <field name="asset_id"/>
-                    <field name="depreciation_date"/>
                     <field name="depreciated_value"/>
-                    <field name="dep_run_process_id"/>
                 </tree>
             </field>
         </record>
@@ -381,7 +377,8 @@
             <field name="res_model">asset_management.depreciation</field>
             <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
-            <field name="context" eval="{'search_default_my_depreciation': 1}"/>
+            <field name="context" eval="{'retirement
+                                        ': 1}"/>
             <field name="view_ids" eval="[(5, 0, 0),
                     (0, 0, {'view_mode': 'tree', 'view_id': ref('depreciation_tree_view')}),
                     (0, 0, {'view_mode': 'form', 'view_id': ref('depreciation_form_view')})]"/>
@@ -400,8 +397,6 @@
                     <field name="category_id"/>
                     <field name="book_id"/>
                     <field name="depreciation_method"/>
-                    <field name="method_time"/>
-                    <field name="journal_id"/>
                 </tree>
             </field>
         </record>
@@ -551,9 +546,9 @@
             <field name="arch" type="xml">
                 <tree string="Depreciation Run Process tree" edit="false" create="false">
                     <field name="name"/>
-                    <field name="book_id"/>
-                    <field name="process_period_id"/>
                     <field name="process_date"/>
+                    <field name="process_period_id"/>
+                    <field name="book_id"/>
                 </tree>
             </field>
         </record>

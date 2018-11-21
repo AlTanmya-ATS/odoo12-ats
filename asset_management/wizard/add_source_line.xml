@@ -1,0 +1,36 @@
+<odoo>
+    <record id='add_line_wizard_form' model='ir.ui.view'>
+        <field name='name'>add line wizard form view</field>
+        <field name='model'>asset_management.add_source_line</field>
+        <field name='arch' type='xml'>
+            <form string="add">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="source_type"/>
+                        </group>
+                        <group>
+                            <field name="invoice_id"
+                                   attrs="{'required':[('source_type','=','invoice')],'invisible':[('source_type','=','miscellaneous')]}"/>
+                            <field name="invoice_line_ids" attrs="{'required':[('source_type','=','invoice')],'invisible':[('source_type','=','miscellaneous')]}"/>
+                            <field name="amount"
+                                   attrs="{'required':[('source_type','=','invoice')],'invisible':[('source_type','=','miscellaneous')]}"/>
+                            <field name="invoice_id_m_type" attrs="{'invisible':[('source_type','=','invoice')]}"/>
+                            <field name="invoice_line_ids_m_type"
+                                   attrs="{'invisible':[('source_type','=','invoice')]}"/>
+                            <field name="amount_m_type"
+                                   attrs="{'required':[('source_type','=','miscellaneous')],'invisible':[('source_type','=','invoice')]}"/>
+                            <field name="description" attrs="{'readonly':[('id','!=',False)]}"/>
+                        </group>
+                    </group>
+
+                </sheet>
+                <footer>
+                    <button name='add' string='add' class='btn-primary' type='object'
+                            context ="{'amount_m_type':amount_m_type,'source_type':source_type}"/>
+                    <button string='Cancel' class='btn-default' special='cancel'/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
