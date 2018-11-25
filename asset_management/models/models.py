@@ -521,6 +521,16 @@ class BookAssets(models.Model):
             return {'warning': warning}
         if self.assignment_id:
             self.assign_change_flag = True
+            depreciation_line = self.depreciation_line_ids.filtered(lambda x: x.move_check)
+            if depreciation_line:
+                depreciation_line = depreciation_line.sorted(key=lambda l: l.depreciation_date)[-1]
+                calender_period = self.book_id.calendar_line_id
+                if calender_period.start_date <= depreciation_line.depreciation_date < calender_period.end_date:
+                    warning = {
+                        'title': _('Warning!'),
+                        'message': _("Depreciation entries is genreated for this peroid any changing in assignment ")
+                    }
+                    return {'warning': warning}
 
     @api.depends('source_line_ids')
     def _amount_in_source_line(self):
@@ -720,7 +730,7 @@ class BookAssets(models.Model):
                         lambda x: x.sequence == depreciation_line.sequence + 1)
                     if not next_dep_date:
                         raise ValidationError(_(
-                            "You can't change assignment for asset with generated entries for its deprecation in this period reinstall the process to be able to"))
+                            "You can't change assignment for asset ,all its depreciation has entries"))
                     # for dep in depreciation_line:
                     start_period_date = self.book_id.calendar_line_id.start_date
                     if self.prorate_date <= depreciation_line.depreciation_date and not next_dep_date.depreciation_date < start_period_date:
@@ -763,7 +773,7 @@ class BookAssets(models.Model):
 
                         # break
 
-                    elif self.prorate_date <= depreciation_line.depreciation_dateand and next_dep_date.depreciation_date < start_period_date:
+                    elif self.prorate_date <= depreciation_line.depreciation_date and next_dep_date.depreciation_date < start_period_date:
                         if not assign.date_from:
                             values.update({
                                 'date_from': self.prorate_date,
@@ -1289,17 +1299,17 @@ class Assignment(models.Model):
             setattr(self, k, v)
 
     # prevent editing in asset assignment if the entries for the current period is generated
-    @api.multi
-    def write(self, values):
-        for record in self:
-            depreciation_line = record.book_assets_id.depreciation_line_ids.filtered(lambda x: x.move_check)
-            if depreciation_line:
-                depreciation_line = depreciation_line.sorted(key=lambda l: l.depreciation_date)[-1]
-                calender_period = record.book_assets_id.book_id.calendar_line_id
-                if calender_period.start_date <= depreciation_line.depreciation_date < calender_period.end_date:
-                    raise ValidationError(_(
-                        "You can't change assignment for asset with generated entries for its deprecation in this period reinstall the process to be able to"))
-        return super(Assignment, self).write(values)
+    #     @api.multi
+    #     def write(self, values):
+    #         for record in self:
+    #             depreciation_line = record.book_assets_id.depreciation_line_ids.filtered(lambda x: x.move_check)
+    #             if depreciation_line:
+    #                 depreciation_line = depreciation_line.sorted(key=lambda l: l.depreciation_date)[-1]
+    #                 calender_period = record.book_assets_id.book_id.calendar_line_id
+    #                 if calender_period.start_date <= depreciation_line.depreciation_date < calender_period.end_date:
+    #                     raise ValidationError(_(
+    #                         "You can't change assignment for asset with generated entries for its deprecation in this period reinstall the process to be able to"))
+    #         return super(Assignment, self).write(values)
 
     # creat transaction record when adding a new assignment and location
     # @api.model
@@ -1620,12 +1630,14 @@ class Retirement(models.Model):
     @api.depends('asset_id', 'book_id')
     def _get_jl_posted_check(self):
         for record in self:
+            current_peroid = record.book_id.calendar_line_id
             retirement_jl = record.env['asset_management.transaction'].search([('retirement_id', '=', record.id),
                                                                                ('asset_id', '=', record.asset_id.id),
                                                                                ('book_id', '=', record.book_id.id), (
-                                                                               'trx_type', '!=',
-                                                                               'reinstall')]).move_posted_check
-            record.jl_is_posted = True if retirement_jl else False
+                                                                                   'trx_type', '!=',
+                                                                                   'reinstall')]).move_posted_check
+            if current_peroid.start_date <= date.today() <= current_peroid.end_date and retirement_jl:
+                record.jl_is_posted = True
 
     @api.one
     @api.depends('retire_date')
@@ -2041,6 +2053,7 @@ class Transaction(models.Model):
                     'ref': line.asset_id.name,
                     'date': datetime.today() or False,
                     'journal_id': journal_id.id,
+                    'trx_type': line.trx_type,
                     'line_ids': [(0, 0, move_line_1), (0, 0, move_line_2)],
                 }
                 move = line.env['account.move'].create(move_vals)
@@ -2126,6 +2139,7 @@ class Transaction(models.Model):
                     'ref': self.asset_id.name,
                     'date': line.book_id.calendar_line_id.end_date or False,
                     'journal_id': journal_id.id,
+                    'trx_type': line.trx_type,
                     'line_ids': [(0, 0, move_line_1), (0, 0, move_line_2), (0, 0, move_line_3), (0, 0, move_line_4)],
                 }
                 move = line.env['account.move'].create(move_vals)
@@ -2172,6 +2186,7 @@ class Transaction(models.Model):
                     'ref': line.asset_id.name,
                     'date': datetime.today() or False,
                     'journal_id': journal_id.id,
+                    'trx_type': line.trx_type,
                     'line_ids': [(0, 0, move_line_1), (0, 0, move_line_2)],
                 }
                 move = line.env['account.move'].create(move_vals)
@@ -2210,8 +2225,10 @@ class Transaction(models.Model):
                 move_line_1 = {
                     'name': asset_name,
                     'account_id': asset_cost_account,
-                    'debit': 0.0,
-                    'credit': retirement.current_asset_cost,
+                    'debit': 0.0 if float_compare(retirement.retired_cost, 0.0,
+                                                  precision_digits=prec) > 0 else -retirement.retired_cost,
+                    'credit': retirement.retired_cost if float_compare(retirement.retired_cost, 0.0,
+                                                                       precision_digits=prec) > 0 else 0.0,
                     'journal_id': category_books.journal_id.id,
                     'currency_id': company_currency != current_currency and current_currency.id or False,
                     'amount_currency': company_currency != current_currency and - 1.0 * retirement.current_asset_cost or 0.0,
@@ -2222,16 +2239,18 @@ class Transaction(models.Model):
                     'ref': trx.asset_id.name,
                     'date': trx.trx_date or False,
                     'journal_id': category_books.journal_id.id,
+                    'trx_type': trx.trx_type,
                     'line_ids': [(0, 0, move_line_1)],
                 }
+
                 if accum_value:
                     #                     for tag in category_books.accumulated_depreciation_analytic_tag_ids:
                     #                         tag_ids.append((4, tag.id, 0))
                     move_line_2 = {
                         'name': asset_name,
                         'account_id': accumulated_depreciation_account,
-                        'credit': 0.0,
-                        'debit': accum_value,
+                        'credit': 0.0 if float_compare(accum_value, 0.0, precision_digits=prec) > 0 else - accum_value,
+                        'debit': accum_value if float_compare(accum_value, 0.0, precision_digits=prec) > 0 else 0.0,
                         'journal_id': category_books.journal_id.id,
                         'currency_id': company_currency != current_currency and current_currency.id or False,
                         'amount_currency': company_currency != current_currency and - 1.0 * accum_value or 0.0,
@@ -2251,8 +2270,10 @@ class Transaction(models.Model):
                     move_line_3 = {
                         'name': asset_name,
                         'account_id': proceeds_of_sale_account,
-                        'credit': 0.0,
-                        'debit': retirement.proceeds_of_sale,
+                        'credit': 0.0 if float_compare(retirement.proceeds_of_sale, 0.0,
+                                                       precision_digits=prec) > 0 else - retirement.proceeds_of_sale,
+                        'debit': retirement.proceeds_of_sale if float_compare(retirement.proceeds_of_sale, 0.0,
+                                                                              precision_digits=prec) > 0 else 0.0,
                         'journal_id': category_books.journal_id.id,
                         'currency_id': company_currency != current_currency and current_currency.id or False,
                         'amount_currency': company_currency != current_currency and - 1.0 * retirement.proceeds_of_sale or 0.0,
@@ -2270,8 +2291,10 @@ class Transaction(models.Model):
                     move_line_4 = {
                         'name': asset_name,
                         'account_id': cost_of_removal_account,
-                        'debit': 0.0,
-                        'credit': retirement.cost_of_removal,
+                        'debit': 0.0 if float_compare(retirement.cost_of_removal, 0.0,
+                                                      precision_digits=prec) > 0 else - retirement.cost_of_removal,
+                        'credit': retirement.cost_of_removal if float_compare(retirement.cost_of_removal, 0.0,
+                                                                              precision_digits=prec) > 0 else 0.0,
                         'journal_id': category_books.journal_id.id,
                         'currency_id': company_currency != current_currency and current_currency.id or False,
                         'amount_currency': company_currency != current_currency and - 1.0 * retirement.cost_of_removal or 0.0,
@@ -2354,6 +2377,7 @@ class Transaction(models.Model):
                 move_vals = {
                     'ref': trx.asset_id.name,
                     'date': trx.trx_date or False,
+                    'trx_type': trx.trx_type,
                     'journal_id': category_books.journal_id.id,
                     'line_ids': [(0, 0, move_line_1), (0, 0, move_line_2)],
                 }
@@ -2397,6 +2421,7 @@ class Transaction(models.Model):
                     'ref': trx.asset_id.name,
                     'date': trx.trx_date or False,
                     'journal_id': category_books.journal_id.id,
+                    'trx_type': trx.trx_type,
                     'line_ids': [(0, 0, move_line_1), (0, 0, move_line_3)],
                 }
                 # debit
@@ -2500,9 +2525,9 @@ class Calendar(models.Model):
         for a, b in zip(period, period[1:]):
             a_end_date = a.end_date + relativedelta(days=+1)
             if a.end_date > b.start_date:
-                raise ValidationError(_('periods ' + a.name + ' and ' + b.name + ' are not '))
+                raise ValidationError(_('periods ' + a.name + ' and ' + b.name + ' must be anterior '))
             elif a_end_date != b.start_date:
-                raise ValidationError(_('periods ' + a.name + ' and ' + b.name + ' are not d'))
+                raise ValidationError(_('periods ' + a.name + ' and ' + b.name + ' must be anterior '))
 
 
 class CalendarLines(models.Model):

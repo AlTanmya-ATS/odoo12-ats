@@ -6,6 +6,17 @@ class AccountMove(models.Model):
 
     asset_depreciation_id = fields.One2many('asset_management.depreciation', 'move_id',
                                             string='Assets Depreciation Lines', ondelete="restrict")
+    trx_type = fields.Selection(
+        [
+            ('addition', 'Addition'),
+            ('re_class', 'Re_Class'),
+            ('transfer', 'Transfer'),
+            ('cost_adjustment', 'Cost Adjustment'),
+            ('full_retirement', 'Full Retirement'),
+            ('partial_retirement', 'Partial Retirement'),
+            ('reinstall', 'Reinstall')
+        ], string='Transaction Type', track_visibility='onchange',readonly = True
+    )
 
     # asset_transaction_id = fields.One2many('asset_management.transaction','move_id',string='Assets Transaction Lines', ondelete="restrict")
     @api.multi

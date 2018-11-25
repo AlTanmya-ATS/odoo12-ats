@@ -322,7 +322,7 @@
                     <button string="Set to Retire" type="action" name="%(set_asset_to_retire)d" class="oe_highlight" context="{'book_id':book_id ,'asset_id':asset_id}"
                             attrs="{'invisible':[('state','!=','open')]}"/>
                     <button name="add_source" string="add source line" type="object"
-                          attrs="{'invivsible':[('id','=',False)]}"/>
+                          attrs="{'invisible':[('id','=',False)]}"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,open"/>
                 </header>
 

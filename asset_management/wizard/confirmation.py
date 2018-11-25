@@ -24,7 +24,6 @@ class Confirmation(models.TransientModel):
             'amount': val['amount'] if val['amount'] else False,
             'invoice_id_m_type': val['invoice_id_m_type'] if val['invoice_id_m_type'] else False,
             'invoice_line_ids_m_type': val['invoice_line_ids_m_type'] if val['invoice_line_ids_m_type'] else False,
-            'amount_m_type': val['amount_m_type'] if val['amount_m_type'] else False,
             'description': val['description'] if val['description'] else False,
             'added_to_asset_cost': True
         }
@@ -40,6 +39,3 @@ class Confirmation(models.TransientModel):
         # book_asset_id.write({'source_line_ids':[(6, False, self.slist)]})
         # book_asset_id.date_in_service = self.date
         return {'type': 'ir.actions.act_window_close'}
-
-
-

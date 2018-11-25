@@ -30,7 +30,7 @@
         'views/resources.xml',
         'wizard/asset_modify_view.xml',
         'views/form_views.xml',
-        # 'views/inherited_form_view.xml',
+        'views/inherited_form_view.xml',
         'views/views.xml',
         'views/menuitem_view.xml',
         'views/templates.xml',
