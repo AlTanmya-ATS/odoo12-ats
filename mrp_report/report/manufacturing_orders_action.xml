@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <report
+            id = "manufacturing_orders_action"
+            model ="mrp.production"
+            string="Daily Manufacturing Orders"
+            report_type="qweb-pdf"
+            name="mrp_report.manufacturing_orders_template"
+            file="mrp_report.manufacturing_orders_template"
+            attachment_use="false"
+    />
+
+
+</odoo>
+
