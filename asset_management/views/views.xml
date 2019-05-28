@@ -29,6 +29,8 @@
             </field>
         </record>
 
+
+
         <!--retirement action-->
         <record model="ir.actions.act_window" id="retirement_list_action">
             <field name="name">Retirement</field>
@@ -224,7 +226,8 @@
             <field name="model">asset_management.assignment</field>
             <field name="arch" type="xml">
                 <tree string="Assignment Tree" create="false" edit="false">
-                    <field name="name"/>
+                    <field name="asset_id"/>
+                    <field name="book_id"/>
                     <field name="location_id"/>
                     <field name="responsible_id"/>
                     <field name="percentage"/>

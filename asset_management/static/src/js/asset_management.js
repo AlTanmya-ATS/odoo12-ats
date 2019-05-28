@@ -40,6 +40,7 @@ var AssetManagementDepreciationWidget = AbstractField.extend({
      * @override
      * @private
      */
+
     _render: function () {
         var className = '';
         var disabled = true;
@@ -59,6 +60,7 @@ var AssetManagementDepreciationWidget = AbstractField.extend({
             title: title,
             disabled: disabled,
         }).addClass('btn btn-sm btn-link fa fa-circle o_dep_lines_toggler ' + className);
+
         this.$el.html($button);
     },
 

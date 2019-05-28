@@ -8,6 +8,8 @@ from odoo.exceptions import UserError, ValidationError
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
 from odoo.tools import float_compare, float_is_zero
 from lxml import etree
+import logging
+_logger=logging.getLogger(__name__)
 
 
 class Asset(models.Model):
@@ -156,6 +158,31 @@ class Asset(models.Model):
         else:
             new_moved_lines += old_moved_lines
             return new_moved_lines
+
+    @api.model
+    def get_coordination(self,domain):
+        _logger.error("domain is %s:",domain)
+        asset_location = []
+        assets=self.env['asset_management.asset'].search(domain).ids
+        _logger.error("locations %s:",assets)
+        domain = [('asset_id','in',assets)]
+        asset_locations = self.env['asset_management.assignment'].search(domain)
+        _logger.error("asset_locations : %s",asset_locations)
+        for location in asset_locations:
+            asset_location.append({
+                'assignment_id':location.id,
+                'book_assets_id':location.book_assets_id.id,
+                'lat':location.location_id.lat,
+                'lang':location.location_id.lang,
+                'name':location.book_assets_id.asset_id.name,
+                'location_name':location.location_id.name,
+            })
+        _logger.error("asset_locations type: %s",type(asset_locations))
+        _logger.error("asset_locations : %s", asset_locations)
+        _logger.error("asset_location : %s", asset_location)
+        _logger.error("asset_location type: %s", type(asset_location))
+        return asset_location
+
 
     # @api.multi
     # def post_lines_and_close_asset(self, book_id):
@@ -430,6 +457,23 @@ class BookAssets(models.Model):
     analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic Tag',
                                         track_visibility='onchange')
 
+    # @api.model
+    # def get_location(self):
+    #     loca_list = []
+    #     for record in self:
+    #         ll = record.env['asset_management.assignment'].browse([])
+    #         for assign in ll:
+    #             res = {
+    #                 lang: assign.location_id.lang,
+    #                 lat: assign.location_id.let,
+    #                 location: assign.location_id.name,
+    #                 name: assign.resposible_id.name,
+    #                 asset: asset_id.name,
+    #             }
+    #
+    #             loca_list.append(res)
+    #     return loca_list
+
     @api.multi
     @api.depends('asset_id', 'book_id')
     def _asset_retirement_count(self):
@@ -686,6 +730,8 @@ class BookAssets(models.Model):
             for assign in self.assignment_id:
                 vals = {
                     'book_assets_id': self.id,
+                    'asset_id':self.asset_id.id,
+                    'book_id':self.book_id.id,
                     'depreciation_expense_account': assign.depreciation_expense_account.id,
                     'responsible_id': assign.responsible_id.id,
                     'location_id': assign.location_id.id,
@@ -704,6 +750,8 @@ class BookAssets(models.Model):
             for assign in new_assign:
                 values = {
                     'book_assets_id': self.id,
+                    'asset_id': self.asset_id.id,
+                    'book_id': self.book_id.id,
                     'depreciation_expense_account': assign.depreciation_expense_account.id,
                     'responsible_id': assign.responsible_id.id,
                     'location_id': assign.location_id.id,
@@ -752,6 +800,8 @@ class BookAssets(models.Model):
                                     if ss.get('id') == assign.id:
                                         values2 = {
                                             'book_assets_id': self.id,
+                                            'asset_id': self.asset_id.id,
+                                            'book_id': self.book_id.id,
                                             'depreciation_expense_account': ss.get('depreciation_expense_account'),
                                             'responsible_id': ss.get('responsible_id'),
                                             'location_id': ss.get('location_id'),
@@ -1221,10 +1271,10 @@ class Assignment(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     name = fields.Char(string="Assignment", readonly='True', index=True)
     book_assets_id = fields.Many2one('asset_management.book_assets', ondelete='cascade')
-    book_id = fields.Many2one("asset_management.book", string="Book", ondelete='cascade', compute="_get_book_name",
-                              track_visibility='always')
-    asset_id = fields.Many2one("asset_management.asset", string="Asset", ondelete='cascade', compute="_get_asset_name",
-                               track_visibility='always')
+    book_id = fields.Many2one("asset_management.book", string="Book", ondelete='cascade',
+                              track_visibility='always',store=True, readonly=True)
+    asset_id = fields.Many2one("asset_management.asset", string="Asset", ondelete='cascade',
+                               track_visibility='always',store=True,readonly=True)
     depreciation_expense_account = fields.Many2one('account.account', ondelete='set null', required=True,
                                                    track_visibility='onchange')
     responsible_id = fields.Many2one('hr.employee', ondelete='set null', track_visibility='onchange')
@@ -1298,6 +1348,8 @@ class Assignment(models.Model):
         for k, v in value.items():
             setattr(self, k, v)
 
+
+
     # prevent editing in asset assignment if the entries for the current period is generated
     #     @api.multi
     #     def write(self, values):
@@ -1316,21 +1368,23 @@ class Assignment(models.Model):
     # def create(self, values):
     #     values['name']=self.env['ir.sequence'].next_by_code('asset_management.assignment.Assignment')
     #     record=super(Assignment, self).create(values)
-    #     if record.book_assets_id.state == 'open':
-    #         # if record.transfer_date:
-    #         #     date = record.transfer_date
-    #         # else:
-    #         #     date = 'not specified'
-    #         record.env['asset_management.transaction'].create({
-    #             'book_assets_id':record.book_assets_id.id,
-    #             'book_id':record.book_id.id,
-    #             'asset_id': record.asset_id.id,
-    #             'category_id': record.book_assets_id.category_id.id,
-    #             'trx_type': 'transfer',
-    #             'trx_date': datetime.today(),
-    #             'trx_details':'Responsible : '+ record.responsible_id.name + '\nLocation : '+ record.location_id.name
-    #                                 if record.responsible_id else 'Location : '+record.location_id.name
-    #         })
+    #     record.asset_id = record.book_assets_id.asset_id.id
+    #     record.book_id = record.book_assets_id.book_id.id
+    #     # if record.book_assets_id.state == 'open':
+    #     #     # if record.transfer_date:
+    #     #     #     date = record.transfer_date
+    #     #     # else:
+    #     #     #     date = 'not specified'
+    #     #     record.env['asset_management.transaction'].create({
+    #     #         'book_assets_id':record.book_assets_id.id,
+    #     #         'book_id':record.book_id.id,
+    #     #         'asset_id': record.asset_id.id,
+    #     #         'category_id': record.book_assets_id.category_id.id,
+    #     #         'trx_type': 'transfer',
+    #     #         'trx_date': datetime.today(),
+    #     #         'trx_details':'Responsible : '+ record.responsible_id.name + '\nLocation : '+ record.location_id.name
+    #     #                             if record.responsible_id else 'Location : '+record.location_id.name
+    #     #     })
     #     return record
 
     @api.depends('book_assets_id')
@@ -1344,6 +1398,13 @@ class Assignment(models.Model):
         for rec in self:
             rec.book_id = rec.book_assets_id.book_id.id
             return rec.book_id
+
+    @api.onchange('book_assets_id')
+    def _get_book_asset_name(self):
+        for record in self:
+            if record.book_assets_id:
+                record.book_id = record.book_assets_id.book_id.id
+                record.asset_id = record.book_assets_id.asset_id.id
 
     @api.multi
     def unlink(self):
@@ -2466,7 +2527,8 @@ class AssetLocation(models.Model):
     state_id = fields.Many2one('res.country.state', track_visibility='always')
     country_id = fields.Many2one('res.country', required=True, track_visibility='always')
     active = fields.Boolean(default=True, track_visibility='onchange')
-
+    lang=fields.Float()
+    lat =fields.Float()
 
 class RetirementType(models.Model):
     _name = 'asset_management.retirement_type'

@@ -27,17 +27,11 @@ class AccountMove(models.Model):
         return super(AccountMove, self).button_cancel()
 
     @api.multi
-    def post(self):
+    def post(self, invoice=False):
         for move in self:
             for depreciation_line in move.asset_depreciation_id:
                 depreciation_line.post_lines_and_close_asset()
-        return super(AccountMove, self).post()
+        return super(AccountMove, self).post(invoice=invoice)
 
-    # @api.multi
-    # def post(self):
-    #     for move in self:
-    #         for depreciation_line in move.asset_depreciation_id:
-    #             depreciation_line.asset_id.post_lines_and_close_asset(depreciation_line.book_id.id)
-    #         for transaction_line in move.asset_transaction_id:
-    #             transaction_line.asset_id.post_lines_and_close_asset(transaction_line.book_id.id)
-    #     return super(AccountMove, self).post()
+
+

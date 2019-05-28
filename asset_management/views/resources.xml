@@ -3,6 +3,8 @@
 	<!-- Adds all assets in Odoo -->
     <template id="assets_backend" name="asset management" inherit_id="web.assets_backend">
         <xpath expr="." position="inside">
+             <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js" integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg==" crossorigin=""/>
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
              <!-- All links to CSS and JS files should be added in here. -->
              <link rel="stylesheet" href="/asset_management/static/src/scss/asset_management.scss"/>
              <script type="text/javascript" src="/asset_management/static/src/js/asset_management.js"></script>

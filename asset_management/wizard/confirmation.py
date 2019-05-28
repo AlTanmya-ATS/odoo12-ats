@@ -13,7 +13,6 @@ class Confirmation(models.TransientModel):
 
     @api.multi
     def confirm(self):
-        #         source_id = self.env.context.get('active_id')
         val = self.env.context.get('values')
         values = {
             'book_assets_id': self.env.context.get('active_id'),
@@ -32,10 +31,5 @@ class Confirmation(models.TransientModel):
         asset.write({'source_line_ids': [(0, 0, values)],
                      'current_cost': asset.current_cost + val['amount_m_type'] or asset.current_cost + val['amount']
                      })
-        #         book_asset_id.write({'source_line_ids':[(0,0,values)]
-        #                             })
-        # for s in self.slist:
-        # d.append((6, False, self.slist))
-        # book_asset_id.write({'source_line_ids':[(6, False, self.slist)]})
-        # book_asset_id.date_in_service = self.date
+
         return {'type': 'ir.actions.act_window_close'}

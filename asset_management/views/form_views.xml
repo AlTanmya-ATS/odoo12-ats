@@ -207,7 +207,7 @@
         </field>
     </record>
 
-    <!--assignment  form view-->
+    <!--assignment form view-->
     <record model="ir.ui.view" id="assignment_form_view">
         <field name="name">assignment.form</field>
         <field name="model">asset_management.assignment</field>
@@ -216,8 +216,8 @@
                 <sheet>
                     <group>
                         <group>
-                            <field name="asset_id"/>
-                            <field name="book_id"/>
+                            <field name="asset_id" force_save="1"/>
+                            <field name="book_id" force_save="1"/>
                             <field name="depreciation_expense_account"/>
                             <field name="analytic_account_id"
                                    groups="analytic.group_analytic_accounting"
@@ -389,8 +389,8 @@
 
                     <notebook>
                         <page name="assignment" string="Assignment">
-                            <field name="assignment_id" widget="section_and_note_one2many"
-                                   context="{'default_book_assets_id':id,'form_view_ref':'asset_management.assignment_form_view',
+                            <field name="assignment_id" widget="One2many_list"
+                                   context="{'default_book_assets_id':id,'default_asset_id':asset_id ,'default_book_id':book_id , 'form_view_ref':'asset_management.assignment_form_view',
                                    'book_one2many_view':book_one2many_view,
                                             'default_analytic_account_id':analytic_account_id, 'default_analytic_tag_ids':analytic_tag_ids}"
                                    attrs="{'readonly':[('state','=','close')]}">
@@ -406,7 +406,7 @@
                         </page>
 
                         <page name="source line" string="Source Line">
-                            <field name="source_line_ids" widget="section_and_note_one2many"
+                            <field name="source_line_ids" widget="One2many_list"
                                    context="{'form_view_ref':'asset_management.source_line_form_view','book_one2many_view':book_one2many_view}"
                                    attrs="{'readonly':['|',('state','=','close'),('id','!=',False)]}">
                                 <tree string="Source Line" edit="false" delete="false">
@@ -443,6 +443,7 @@
                                 </tree>
                             </field>
                         </page>
+
                     </notebook>
                 </sheet>
                 <div class="oe_chatter">
@@ -706,7 +707,32 @@
                             <field name="country_id" placeholder="Country" class="oe_address_country"
                                    options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
                         </div>
+                        <field name="lat"/>
+                        <field name="lang"/>
                     </group>
+                    <!--<notebook >-->
+                        <!--<page string="Map">-->
+                            <!--<div id="imap" />-->
+                            <!--<script>-->
+                                  <!--// initialize the map-->
+                                 <!--var imap = L.map('imap').setView([33.5138, 36.2765], 13);-->
+                                 <!--L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",-->
+                                   <!--{-->
+                                     <!--attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',-->
+                                     <!--maxZoom: 19,-->
+                                     <!--minZoom:5-->
+                                   <!--}).addTo(imap);-->
+                                 <!--imap.on("click" , function(event){-->
+                                     <!--var latlng = imap.mouseEventToLatLng(event.originalEvent);-->
+                                     <!--if (this.marker != undefined ) {this.marker.removeFrom(imap)};-->
+                     <!--style="width:720px ; height: 434.55px"                this.marker = L.marker(latlng).addTo(imap);-->
+                                     <!--console.log("lat "+latlng.lat+ " lang" +latlng.lng);-->
+                                     <!--&lt;!&ndash;document.getElementByName('lat').innerHTML = latlng.lat;&ndash;&gt;-->
+                                     <!--&lt;!&ndash;document.getElementByName('lang').innerHTML = latlng.lng;&ndash;&gt;-->
+                                    <!--})-->
+                            <!--</script>-->
+                        <!--</page>-->
+                    <!--</notebook>-->
                 </sheet>
                 <div class="oe_chatter">
                     <field name="message_follower_ids" widget="mail_followers"/>
