@@ -9,7 +9,7 @@
             <xpath expr="//field[@name='journal_id']" position="after">
                 <field name="trx_type"/>
             </xpath>
-            <xpath expr="//button[@name='256']" position="attributes">
+            <xpath expr="//button[@name='173']" position="attributes">
                 <attribute name="attrs">
                     {'invisible':['|','|',('trx_type','=','full_retirement'),('trx_type','=','partial_retirement'),('state','!=','posted')]}
                 </attribute>
