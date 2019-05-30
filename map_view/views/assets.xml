@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="assets_backend" name="Map View Assets" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <script type="text/javascript" src="/map_view/static/src/js/asset_map_view.js"/>
+            <link rel="stylesheet" type="text/scss" href="/map_view/static/src/scss/asset_map_view.scss"/>
+        </xpath>
+    </template>
+</odoo>
+
