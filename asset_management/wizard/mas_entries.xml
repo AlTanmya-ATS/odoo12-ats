@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mas_entries_wizard" model="ir.ui.view">
+        <field name="name">mas_entries_wizard</field>
+        <field name="model">asset_management.mas_entries_wizard</field>
+        <field name="arch" type="xml">
+            <form string="Compute Asset">
+                <group>
+                    <field name="book_id"/>
+                    <field name="period_id"/>
+                    <field name="post_entries"/>
+                    <field name="open_next_period_flag_enable" invisible="1"/>
+                    <field name="open_next_period" attrs="{'readonly':[('open_next_period_flag_enable','=',False)]}"/>
+                </group>
+                <footer>
+                    <button string="Generate Entries" name="moves_compute" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-default" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="action_view_mas_entries_wizard" model="ir.actions.act_window">
+        <field name="name">Post Asset Deprecation Lines</field>
+        <field name="res_model">asset_management.mas_entries_wizard</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_mas_entries_wizard"/>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_actions_on_asset" name="operations"
+              parent="main_assetmanagement_menu"/>
+
+    <menuitem id="menu_mass_entries" name="Generate Entries"
+              parent="menu_actions_on_asset"/>
+
+    <menuitem name="Generate Assets Entries" action="action_view_mas_entries_wizard"
+              id="menu_asset_depreciation_post_lines"
+              parent="menu_mass_entries"/>
+
+</odoo>

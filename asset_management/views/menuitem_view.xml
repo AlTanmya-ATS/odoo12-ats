@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <menuitem id="main_assetmanagement_menu" name="Asset Mangement"/>
+
+    <menuitem id="asset_management_menu" name="Asset Mangement"
+              parent="main_assetmanagement_menu"/>
+
+    <menuitem id="asset_management_report_menu" name="Reports"
+              parent="main_assetmanagement_menu"/>
+
+    <menuitem id="asset_menu" name="Asset" parent="asset_management_menu"
+              action="asset_list_action"/>
+
+    <menuitem id="category_menu" name="Category" parent="asset_management_menu"
+              action="category_list_action"/>
+
+    <menuitem id="book_menu" name="Book" parent="asset_management_menu"
+              action="book_list_action"/>
+
+    <menuitem id="book_assets_menu" name="Book Assets" parent="asset_management_report_menu"
+              action="book_assets_list_action"/>
+
+    <menuitem id="assignment_menu" name="Assignment" parent="asset_management_report_menu"
+              action="assignment_list_action"/>
+
+
+    <menuitem id="source_line_menu" name="Source Line" parent="asset_management_report_menu"
+              action="source_line_list_action"/>
+
+    <menuitem id="transaction_menu" name="Transaction" parent="asset_management_report_menu"
+              action="transaction_list_action"/>
+
+    <menuitem id="depreciation_menu" name="Depreciation" parent="asset_management_report_menu"
+              action="depreciation_list_action"/>
+
+
+    <menuitem id="category_books_menu" name="Category Books" parent="asset_management_report_menu"
+              action="category_books_list_action"/>
+
+
+    <menuitem id="asset_location_menu" name="Location"
+              parent="main_assetmanagement_menu"/>
+
+
+    <menuitem name="Location" action="asset_management_location_action"
+              id="asset_management_location_meun"
+              parent="asset_location_menu"/>
+
+    <menuitem id="retirement_menu" name="Retirement" parent="asset_management_menu"
+              action="retirement_list_action"/>
+
+    <menuitem id="retirement_type_menu" name="Retirement Type" parent="asset_management_menu"
+              action="asset_management_retirement_type_action"/>
+
+    <menuitem id="calendar_menu" name="Calendar"
+              parent="main_assetmanagement_menu"/>
+
+    <menuitem name="Calendar" action="asset_management_calendar_action"
+              id="asset_management_calendar_meun"
+              parent="calendar_menu"/>
+
+    <menuitem name="Depreciation Run Process" action="dep_run_process_action"
+              id="dep_run_process_meun"
+              parent="calendar_menu"/>
+
+
+</odoo>

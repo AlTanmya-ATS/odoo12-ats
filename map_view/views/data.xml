@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record model="ir.ui.view" id="location_map_view">
+      <field name="model">asset_management.asset</field>
+      <field name="mode">primary</field>
+      <field name="arch" type="xml">
+        <map_view  display_asset_location ="1">
+        </map_view>
+      </field>
+    </record>
+
+
+    <record model="ir.actions.act_window" id="location_map_view_action">
+            <field name="name">Map Location</field>
+            <field name="res_model">asset_management.asset</field>
+            <field name="view_mode">map_view</field>
+            <field name="view_id" ref="location_map_view"/>
+    </record>
+
+    <menuitem id="location_map" name="Location Map" parent="asset_management.asset_location_menu" action="location_map_view_action"/>
+</odoo>

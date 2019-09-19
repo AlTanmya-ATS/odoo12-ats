@@ -1,0 +1,668 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!--retirement tree view-->
+        <record model="ir.ui.view" id="retirement_tree_view">
+            <field name="name">retirement.tree</field>
+            <field name="model">asset_management.retirement</field>
+            <field name="arch" type="xml">
+                <tree string="Retirement Tree">
+                    <field name="name"/>
+                    <field name = "asset_id"/>
+                    <field name="book_id"/>
+                    <field name="retire_date"/>
+                    <field name = "state"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--retirement search view  -->
+        <record model="ir.ui.view" id="retirement_view_search">
+            <field name="name">retirement.search</field>
+            <field name="model">asset_management.retirement</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="book_assets_id"/>
+                    <field name="retire_date"/>
+                </search>
+            </field>
+        </record>
+
+
+
+        <!--retirement action-->
+        <record model="ir.actions.act_window" id="retirement_list_action">
+            <field name="name">Retirement</field>
+            <field name="res_model">asset_management.retirement</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context" eval="{'search_default_my_retirement': 1}"/>
+            <field name="view_ids" eval="[(5, 0, 0),
+                    (0, 0, {'view_mode': 'tree', 'view_id': ref('retirement_tree_view')}),
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('retirement_form_view')})]"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Create the first retirement
+                </p>
+            </field>
+        </record>
+
+        <!--asset tree view-->
+        <record model="ir.ui.view" id="asset_tree_view">
+            <field name="name">asset.tree</field>
+            <field name="model">asset_management.asset</field>
+            <field name="arch" type="xml">
+                <tree string="Asset Tree">
+                    <field name="name"/>
+                    <field name="asset_serial_number"/>
+                    <field name="asset_type"/>
+                    <field name="item_id"/>
+                    <field name="description"/>
+
+                </tree>
+            </field>
+        </record>
+
+        <!--asset search view-->
+        <record model="ir.ui.view" id="asset_search_view">
+            <field name="name">asset.search</field>
+            <field name="model">asset_management.asset</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="description"/>
+                </search>
+            </field>
+        </record>
+
+        <!--asset action -->
+        <record model="ir.actions.act_window" id="asset_list_action">
+            <field name="name">Asset</field>
+            <field name="res_model">asset_management.asset</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context" eval="{'search_default_my_asset': 1}"/>
+            <field name="view_ids" eval="[(5,0,0),
+                    (0,0,{'view_mode':'tree','view_id':ref('asset_tree_view')}),
+                    (0,0,{'view_mode':'form' , 'view_id':ref('asset_form_view')})]"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Create the first asset
+                </p>
+            </field>
+        </record>
+
+        <!--category tree view-->
+        <record model="ir.ui.view" id="category_tree_view">
+            <field name="name">category.tree</field>
+            <field name="model">asset_management.category</field>
+            <field name="arch" type="xml">
+                <tree string="Category Tree">
+                    <field name="name"/>
+                    <field name="description"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--category search view-->
+        <record model="ir.ui.view" id="category_search_view">
+            <field name="name">category.search</field>
+            <field name="model">asset_management.category</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="description"/>
+                </search>
+            </field>
+        </record>
+
+        <!--category action -->
+        <record model="ir.actions.act_window" id="category_list_action">
+            <field name="name">Category</field>
+            <field name="res_model">asset_management.category</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context" eval="{'search_default_my_category': 1}"/>
+            <field name="view_ids" eval="[(5,0,0),
+                    (0,0,{'view_mode':'tree','view_id':ref('category_tree_view')}),
+                    (0,0,{'view_mode':'form' , 'view_id':ref('category_form_view')})]"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Create the first category
+                </p>
+            </field>
+        </record>
+
+        <!--book tree view-->
+        <record model="ir.ui.view" id="book_tree_view">
+            <field name="name">book.tree</field>
+            <field name="model">asset_management.book</field>
+            <field name="arch" type="xml">
+                <tree string="Book Tree">
+                    <field name="name"/>
+                    <field name="company_id"/>
+                    <field name="description"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--book search view-->
+        <record model="ir.ui.view" id="book_search_view">
+            <field name="name">book.search</field>
+            <field name="model">asset_management.book</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="description"/>
+                </search>
+            </field>
+        </record>
+
+        <!--book action-->
+        <record model="ir.actions.act_window" id="book_list_action">
+            <field name="name">Book</field>
+            <field name="res_model">asset_management.book</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_ids" eval="[(5,0,0),
+                    (0,0,{'view_mode':'tree','view_id':ref('book_tree_view')}),
+                    (0,0,{'view_mode':'form' , 'view_id':ref('book_form_view')})]"/>
+            <field name="context" eval="{'search_default_my_book': 1}"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Create the first book
+                </p>
+            </field>
+        </record>
+
+        <!--book asset tree view-->
+        <record model="ir.ui.view" id="book_asset_tree_view">
+            <field name="name">book_asset.tree</field>
+            <field name="model">asset_management.book_assets</field>
+            <field name="arch" type="xml">
+                <tree string="Book Asset Tree" create="false" edit="false">
+                    <field name="book_id"/>
+                    <field name="asset_id"/>
+                    <field name="category_id"/>
+                    <field name="state"/>
+                    <field name="residual_value"/>
+                    <field name="original_cost"/>
+                    <field name="method"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--book asset search view-->
+        <record model="ir.ui.view" id="book_asset_search_view">
+            <field name="name">book asset.search</field>
+            <field name="model">asset_management.book_assets</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="book_id"/>
+                    <field name="asset_id"/>
+                    <field name="category_id"/>
+                    <field name="state"/>
+                </search>
+            </field>
+        </record>
+
+        <!--book asset action-->
+        <record model="ir.actions.act_window" id="book_assets_list_action">
+            <field name="name">Book Asset</field>
+            <field name="res_model">asset_management.book_assets</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context" eval="{'search_default_my_book_assets': 1}"/>
+            <field name="view_ids" eval="[(5, 0, 0),
+                    (0, 0, {'view_mode': 'tree', 'view_id': ref('book_asset_tree_view')}),
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('book_assets_form_view')})]"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Create the first book assets
+                </p>
+            </field>
+        </record>
+
+        <!--assignment tree view-->
+        <record model="ir.ui.view" id="assignment_tree_view">
+            <field name="name">assignment.tree</field>
+            <field name="model">asset_management.assignment</field>
+            <field name="arch" type="xml">
+                <tree string="Assignment Tree" create="false" edit="false">
+                    <field name="asset_id"/>
+                    <field name="book_id"/>
+                    <field name="location_id"/>
+                    <field name="responsible_id"/>
+                    <field name="percentage"/>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--assignment search view-->
+        <record model="ir.ui.view" id="assignment_search_view">
+            <field name="name">assignment.search</field>
+            <field name="model">asset_management.assignment</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="responsible_id"/>
+                    <filter name="current_assignment" string="Current" domain="[('history_flag','=',False)]"/>
+                </search>
+            </field>
+        </record>
+
+        <!--assignment action-->
+        <record model="ir.actions.act_window" id="assignment_list_action">
+            <field name="name">Assignment</field>
+            <field name="res_model">asset_management.assignment</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context" eval="{'search_default_current_assignment': 1}"/>
+            <field name="view_ids" eval="[(5, 0, 0),
+                (0, 0, {'view_mode': 'tree', 'view_id': ref('assignment_tree_view')}),
+                (0, 0, {'view_mode': 'form', 'view_id': ref('assignment_form_view')})]"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Create the first assignment
+                </p>
+            </field>
+        </record>
+
+        <!--source line tree view-->
+        <record model="ir.ui.view" id="source_line_tree_view">
+            <field name="name">source_line.tree</field>
+            <field name="model">asset_management.source_line</field>
+            <field name="arch" type="xml">
+                <tree string="Source Line Tree" edit="false" create="false">
+                    <field name="name"/>
+                    <field name="source_type"/>
+                    <field name="invoice_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--source line search view-->
+        <record model="ir.ui.view" id="source_line_search_view">
+            <field name="name">source_line.search</field>
+            <field name="model">asset_management.source_line</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="asset_id"/>
+                </search>
+            </field>
+        </record>
+
+        <!--source line action-->
+        <record model="ir.actions.act_window" id="source_line_list_action">
+            <field name="name">Source Line</field>
+            <field name="res_model">asset_management.source_line</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context" eval="{'search_default_my_source line': 1}"/>
+            <field name="view_ids" eval="[(5, 0, 0),
+                    (0, 0, {'view_mode': 'tree', 'view_id': ref('source_line_tree_view')}),
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('source_line_form_view')})]"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Create the first source line
+                </p>
+            </field>
+        </record>
+
+        <!--transaction tree view-->
+        <record model="ir.ui.view" id="transaction_tree_view">
+            <field name="name">transaction.tree</field>
+            <field name="model">asset_management.transaction</field>
+            <field name="arch" type="xml">
+                <tree string="Transaction Tree" create="false" edit="false">
+                    <field name="name"/>
+                    <field name="asset_id"/>
+                    <field name="book_id"/>
+                    <field name="trx_type"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--transaction search view-->
+        <record model="ir.ui.view" id="transaction_search_view">
+            <field name="name">transaction.search</field>
+            <field name="model">asset_management.transaction</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="trx_type"/>
+                </search>
+            </field>
+        </record>
+
+        <!--transaction action-->
+        <record model="ir.actions.act_window" id="transaction_list_action">
+            <field name="name">Transaction</field>
+            <field name="res_model">asset_management.transaction</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context" eval="{'search_default_my_transaction': 1}"/>
+            <field name="view_ids" eval="[(5, 0, 0),
+                (0, 0, {'view_mode': 'tree', 'view_id': ref('transaction_tree_view')}),
+                (0, 0, {'view_mode': 'form', 'view_id': ref('transaction_form_view')})]"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Create the first transaction
+                </p>
+            </field>
+        </record>
+
+        <!--depreciation tree view-->
+        <record model="ir.ui.view" id="depreciation_tree_view">
+            <field name="name">depreciation.tree</field>
+            <field name="model">asset_management.depreciation</field>
+            <field name="arch" type="xml">
+                <tree string="Depreciation Tree" create="false" edit="false">
+                    <field name="name"/>
+                    <field name="book_id"/>
+                    <field name="asset_id"/>
+                    <field name="depreciated_value"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--depreciation search view-->
+        <record model="ir.ui.view" id="depreciation_search_view">
+            <field name="name">depreciation.search</field>
+            <field name="model">asset_management.depreciation</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                </search>
+            </field>
+        </record>
+
+        <!--depreciation action-->
+        <record model="ir.actions.act_window" id="depreciation_list_action">
+            <field name="name">Depreciation</field>
+            <field name="res_model">asset_management.depreciation</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context" eval="{'retirement
+                                        ': 1}"/>
+            <field name="view_ids" eval="[(5, 0, 0),
+                    (0, 0, {'view_mode': 'tree', 'view_id': ref('depreciation_tree_view')}),
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('depreciation_form_view')})]"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Create the first depreciation
+                </p>
+            </field>
+        </record>
+
+        <!--category books tree-->
+        <record id="category_book_tree" model="ir.ui.view">
+            <field name="name">Category Books Tree</field>
+            <field name="model">asset_management.category_books</field>
+            <field name="arch" type="xml">
+                <tree string="Category Books" create="false" edit="false">
+                    <field name="category_id"/>
+                    <field name="book_id"/>
+                    <field name="depreciation_method"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--category books action-->
+        <record model="ir.actions.act_window" id="category_books_list_action">
+            <field name="name">Category Books</field>
+            <field name="res_model">asset_management.category_books</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context" eval="{'search_default_my_category_books': 1}"/>
+            <field name="view_ids" eval="[(5, 0, 0),
+                    (0, 0, {'view_mode': 'tree', 'view_id': ref('category_book_tree')}),
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('category_books_form_view')})]"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Create the first category books
+                </p>
+            </field>
+        </record>
+
+        <!--asset location list-->
+        <record id="asset_management_location_view_list" model="ir.ui.view">
+            <field name="name">Asset.Location.tree</field>
+            <field name="model">asset_management.location</field>
+            <field name="arch" type="xml">
+                <tree string="Location Tree">
+                    <field name="name"/>
+                    <field name="city"/>
+                    <field name="country_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--asset location search-->
+        <record id="asset_management_location_search" model="ir.ui.view">
+            <field name="name">Asset.Location.search</field>
+            <field name="model">asset_management.location</field>
+            <field name="arch" type="xml">
+                <search string="Location Search">
+                    <field name="name"/>
+                    <field name="city"/>
+                    <field name="country_id"/>
+                </search>
+            </field>
+        </record>
+
+        <!--asset location action-->
+        <record id="asset_management_location_action" model="ir.actions.act_window">
+            <field name="name">Asset Location</field>
+            <field name="res_model">asset_management.location</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context" eval="{'search_default_my_location': 1}"/>
+                        <field name="view_ids" eval="[(5, 0, 0),
+                    (0, 0, {'view_mode': 'tree', 'view_id': ref('asset_management_location_search')}),
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('asset_management_location_view_form')})]"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Create the first Location
+                </p>
+            </field>
+        </record>
+
+        <!--retirement type tree-->
+        <record id="asset_management_retirement_type_tree" model="ir.ui.view">
+            <field name="name">Retirement Type Tree</field>
+            <field name="model">asset_management.retirement_type</field>
+            <field name="arch" type="xml">
+                <tree string="Retirement Type Tree">
+                    <field name="name"/>
+                    <field name="proceeds_of_sale_account"/>
+                    <field name="cost_of_removal_account"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--retirement type search-->
+        <record id="asset_management_retirement_type_search" model="ir.ui.view">
+            <field name="name">Retirement Type search</field>
+            <field name="model">asset_management.retirement_type</field>
+            <field name="arch" type="xml">
+                <search string="Retirement Type Search">
+                    <field name="name"/>
+                    <field name="proceeds_of_sale_account"/>
+                    <field name="cost_of_removal_account"/>
+                </search>
+            </field>
+        </record>
+
+        <!--retirement type action-->
+        <record id="asset_management_retirement_type_action" model="ir.actions.act_window">
+            <field name="name">Retirement Type Action</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">asset_management.retirement_type</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_ids" eval="[(5, 0, 0),
+                    (0, 0, {'view_mode': 'tree', 'view_id': ref('asset_management_retirement_type_tree')}),
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('asset_management_retirement_type_view_form')})]"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Create the first Retirement Type
+                </p>
+            </field>
+        </record>
+
+        <!--calender tree-->
+        <record id="calendar_tree_view" model="ir.ui.view">
+            <field name="name">Calendar List</field>
+            <field name="model">asset_management.calendar</field>
+            <field name="arch" type="xml">
+                <tree name="calendar tree">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--calender search-->
+        <record id="calendar_search_view" model="ir.ui.view">
+            <field name="name">Calendar Search</field>
+            <field name="model">asset_management.calendar</field>
+            <field name="arch" type="xml">
+                <search string="Calendar Search">
+                    <field name="name"/>
+                </search>
+            </field>
+        </record>
+
+          <!--calender action-->
+        <record id="asset_management_calendar_action" model="ir.actions.act_window">
+            <field name="name">Asset Calendar</field>
+            <field name="res_model">asset_management.calendar</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_ids" eval="[(5,0,0),
+                    (0,0,{'view_mode':'tree','view_id':ref('calendar_tree_view')}),
+                    (0,0,{'view_mode':'form' , 'view_id':ref('calender_form_view')})]"/>
+            <field name="context" eval="{'search_default_my_calendar': 1}"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Create the first calendar
+                </p>
+            </field>
+        </record>
+
+        <!--depreciation run process list-->
+        <record id="dep_run_process_list_view" model="ir.ui.view">
+            <field name="name">dep run process tree</field>
+            <field name="model">asset_management.deprunprocess</field>
+            <field name="arch" type="xml">
+                <tree string="Depreciation Run Process tree" edit="false" create="false">
+                    <field name="name"/>
+                    <field name="process_date"/>
+                    <field name="process_period_id"/>
+                    <field name="book_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--depreciation run process search-->
+        <record id="dep_run_process_search_view" model="ir.ui.view">
+            <field name="name">dep run process Search</field>
+            <field name="model">asset_management.deprunprocess</field>
+            <field name="arch" type="xml">
+                <search string="Depreciation Run Process Search">
+                    <field name="name"/>
+                    <field name="process_date"/>
+                    <field name="process_period_id"/>
+                </search>
+            </field>
+        </record>
+
+        <!--depreciation run process action-->
+        <record id="dep_run_process_action" model="ir.actions.act_window">
+            <field name="name">dep_run_process action</field>
+            <field name="res_model">asset_management.deprunprocess</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_ids" eval="[(5, 0, 0),
+                    (0, 0, {'view_mode': 'tree', 'view_id': ref('dep_run_process_list_view')}),
+                    (0, 0, {'view_mode': 'form', 'view_id': ref('dep_run_process_form_view')})]"/>
+            <field name="context" eval="{'search_default_my_deprunprocess': 1}"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Create the first depreciation run process
+                </p>
+            </field>
+        </record>
+
+    </data>
+
+
+    <data>
+
+        <record model="ir.sequence" id="seq_asset">
+            <field name="name">asset_sequence</field>
+            <field name="code">asset_management.asset.Asset</field>
+            <field name="padding">3</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+
+        <record model="ir.sequence" id="seq_book">
+            <field name="name">book_sequence</field>
+            <field name="code">asset_management.book.Book</field>
+            <field name="padding">3</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+
+
+        <record model="ir.sequence" id="seq_transaction">
+            <field name="name">transaction_sequence</field>
+            <field name="code">asset_management.transaction.Transaction</field>
+            <field name="padding">3</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+
+        <record model="ir.sequence" id="seq_retirement">
+            <field name="name">retirement_sequence</field>
+            <field name="code">asset_management.retirement.Retirement</field>
+            <field name="padding">3</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+
+        <record model="ir.sequence" id="seq_depreciation">
+            <field name="name">depreciation_sequence</field>
+            <field name="code">asset_management.depreciation.Depreciation</field>
+            <field name="padding">3</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+
+        <record model="ir.sequence" id="seq_book_asset">
+            <field name="name">book_asset_sequence</field>
+            <field name="code">asset_management.book_assets.BookAssets</field>
+            <field name="padding">3</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+
+        <record model="ir.sequence" id="seq_category_book">
+            <field name="name">category_book_sequence</field>
+            <field name="code">asset_management.category_books.CategoryBooks</field>
+            <field name="padding">3</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+        <record model="ir.sequence" id="seq_source_line">
+            <field name="name">source_line_sequence</field>
+            <field name="code">asset_management.source_line.SourceLine</field>
+            <field name="padding">3</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+
+        <record model="ir.sequence" id="seq_run_dep_process">
+            <field name="name">run_dep_process</field>
+            <field name="code">asset_management.deprunprocess.DepRunProcess</field>
+            <field name="padding">3</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+
+    </data>
+
+</odoo>
+
